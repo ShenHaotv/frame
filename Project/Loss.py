@@ -121,7 +121,7 @@ def lik_wrapper(z,M,S,h,p,k):
     grad_lik_c=np.zeros(2)
     
     if np.min(Time)>0:                             
-       for i in range(nnzm):                                                      #Compute the gradient of the negative log likelihood function with respect to m
+       for i in range(nnzm):                                                   #Compute the gradient of the negative log likelihood function with respect to m
            s=int(M_index[i,0])
            t=int(M_index[i,1])            
            Tgs=Time_grad[:,[s]]
@@ -129,7 +129,7 @@ def lik_wrapper(z,M,S,h,p,k):
            Ts=Time[:,[s]]
            grad_lik_m[i]=2*Tgs.T@(Tt-Ts)+y[s]*(beta[t]-beta[s])
 
-       for i in range(d):                                                         #Compute the gradient of the negative log likelihood function with respect to c     
+       for i in range(d):                                                      #Compute the gradient of the negative log likelihood function with respect to c     
            if Time_grad[i,i]!=0:
               x=np.log(np.abs(Time_grad[i,i]))+np.log(Time[i,i])
               x_c0=x-c[1]*np.log(y[i])
