@@ -51,8 +51,8 @@ def getcoalesce(L,gamma,S,h):                                                  #
     con=getcontrast(o,b)
     Sc=con@S@con.T
     
-    Time=modified_singular_lyapnov(L,gamma,np.ones((d,d)),False)               #Pairwise coalesce time   
-    T_ob=Time[h0[:, np.newaxis],h0]                                            #Pairwise coalesce time of the observed demes
+    Time=modified_singular_lyapnov(L,gamma,np.ones((d,d)),False)               #Pairwise coalescence time   
+    T_ob=Time[h0[:, np.newaxis],h0]                                            #Pairwise coalescence time of the observed demes
     T_bar=T_ob                                                                 #This corresponds to T_bar in the paper
     for i in range (o):
         T_bar[i,i]=T_bar[i,i]*(1-1/h1[i])
@@ -62,7 +62,7 @@ def getcoalesce(L,gamma,S,h):                                                  #
     quant1=np.trace(-Tc_inv@Sc)
     (sign,absquant2)=np.linalg.slogdet(-Tc)
     quant2=sign*absquant2
-    Ttotal=(o-1)/quant1                                                        #Total coalesce time
+    Ttotal=(o-1)/quant1                                                        #Total coalescence time
     lik=quant1+quant2                                                          #Negative log likelihood
     return(Ttotal,Time,T_bar,Tc_inv,lik)
     
