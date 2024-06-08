@@ -62,7 +62,7 @@ def getcoalesce(L,gamma,S,h):                                                  #
     quant1=np.trace(-Tc_inv@Sc)
     (sign,absquant2)=np.linalg.slogdet(-Tc)
     quant2=sign*absquant2
-    Ttotal=(o-1)/quant1                                                        #Total coalescence time
+    Ttotal=(o-1)/quant1                                                        #Total branch length
     lik=quant1+quant2                                                          #Negative log likelihood
     return(Ttotal,Time,T_bar,Tc_inv,lik)
     
@@ -203,7 +203,7 @@ def loss_wrapper(z,M,S,h,p,lamb,deg,k):
     grad_loss_m=grad_lik_m+coeff*grad_pen
     grad_loss_c=grad_lik_c
 
-    grad_loss= np.append(grad_loss_m,grad_loss_c)                               #Merge the gradient
+    grad_loss= np.append(grad_loss_m,grad_loss_c)                              #Merge the gradient
     grad_loss_z=grad_loss*theta                                                #Gradient with respect to z
 
     #print(loss)
