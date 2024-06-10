@@ -85,7 +85,7 @@ class SpatialDiGraph(nx.DiGraph):
 
         self.k=1
         self.c0=np.zeros(2)
-        self.c0[0]=self.gamma0[0]
+        self.c0[0]=self.gamma0[0]/np.sqrt(d)
         self.c0[1]=0.5
      
         self.M=self.M0.copy()
