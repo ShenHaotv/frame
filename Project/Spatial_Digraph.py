@@ -54,7 +54,6 @@ class SpatialDiGraph(nx.DiGraph):
         o=self.S.shape[0]
         diag=np.diag(self.S).reshape((1,o))
         self.distance=np.ones((o,1))@diag+diag.T@np.ones((1,o))-2*self.S
-        #Transform and initialize the model parameters (migration rate, coalesce rate,)
         
         self.nsample=np.zeros(d)
         for i in range (d):
