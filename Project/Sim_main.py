@@ -7,19 +7,19 @@ from Spatial_Digraph import SpatialDiGraph
 from Cross_Validation import run_cv
 from discreteMarkovChain import markovChain
 
-def fitting(genotypes,coord, grid, edges,lamb_grid):
-    
-    sp_graph = SpatialGraph(genotypes, coord, grid, edges, scale_snps=False)
-    sp_digraph = SpatialDiGraph(sp_graph)
-
-    lamb_warmup = 1e3
+def fitting(sp_digraph,
+            lamb_grid,
+            lamb_warmup=None,
+            factr=1e10,
+            factr_fine=1e7):
+       
     l=len(lamb_grid)
 
     cv, node_train_idxs = run_cv(sp_digraph,
                                  lamb_grid,
                                  n_folds=10,
                                  lamb_warmup=lamb_warmup,
-                                 factr=1e10,
+                                 factr=factr,
                                  random_state=500,
                                  outer_verbose=True,
                                  inner_verbose=False,)
@@ -37,7 +37,7 @@ def fitting(genotypes,coord, grid, edges,lamb_grid):
                                            lamb_grid_fine,
                                            n_folds=10,
                                            lamb_warmup=lamb_warmup,
-                                           factr=1e10,
+                                           factr=factr,
                                            random_state=500,
                                            outer_verbose=True,
                                            inner_verbose=False,
@@ -45,13 +45,18 @@ def fitting(genotypes,coord, grid, edges,lamb_grid):
 
     lamb_opt = lamb_grid_fine[np.argmin(cv_fine)]
     lamb_opt = float("{:.3g}".format(lamb_opt))
-
-    sp_digraph.fit(lamb=lamb_warmup, factr=1e10)
-    logm = np.log(sp_digraph.m)
-    logc = np.log(sp_digraph.c)
+    
+    if lamb_warmup is not None:
+       sp_digraph.fit(lamb=lamb_warmup, factr=1e10)
+       logm = np.log(sp_digraph.m)
+       logc = np.log(sp_digraph.c)
+       
+    else:
+        logm = None
+        logc = None
 
     sp_digraph.fit(lamb=lamb_opt,
-                   factr=1e7,
+                   factr=factr_fine,
                    logm_init=logm,
                    logc_init=logc)
 
@@ -85,8 +90,8 @@ def run_sim_migration(topology,
          r=int((N_columns-1)/2)
          directional.append(((r, 1), r, 'E'))
          directional.append(((r, 1), r, 'W'))
-         directional.append(((r, 10), r, 'E'))
-         directional.append(((r, 10), r, 'W'))
+         directional.append(((r, 9), r, 'E'))
+         directional.append(((r, 9), r, 'W'))
     else:
         directional=None
         
@@ -187,15 +192,24 @@ def run_sim_migration(topology,
     ground_truth.y=y.copy()                                                     #Get the stationary distribution   
 
     lamb_grid = np.geomspace(1e-3, 1e3, 13)[::-1]
-    sp_digraph=fitting(genotypes,coord, grid, edges,lamb_grid)
+    lamb_warmup=1e3
+    
+    sp_digraph = SpatialDiGraph(genotypes, coord, grid, edges)
+    sp_digraph=fitting(sp_digraph,
+                       lamb_grid,
+                       lamb_warmup)
     return(ground_truth,sp_digraph)
 
-def run_sim_re(topology,
-               sample_mode,):
+def run_sim_re(sample_mode,
+               re_mode,):
     
-    N_rows=11
+    if re_mode=='radiation':
+       N_rows=9
+    elif re_mode=='directional':
+         N_rows=11
+         
     N_columns=9
-    
+          
     boundary=None
     directional=None
     sink=None
@@ -203,7 +217,7 @@ def run_sim_re(topology,
     circle=None
        
     m_topo=3       
-    m_base=0.1
+    m_base=0
     m_low=0.3
     m_high=3
     
@@ -218,13 +232,19 @@ def run_sim_re(topology,
     else:
         semi_random_sampling=None
         
+    if re_mode=='radiation':
+       reshape_origin=[(4,4)]
+    else:
+        reshape_origin=None
+        
     Simulation = Sim(n_rows=N_rows,
                      n_columns=N_columns,
                      n_samples_per_node=n_samples_per_node,
                      node_sample_prob=node_sample_prob,
                      semi_random_sampling=semi_random_sampling,)
     
-    Simulation.setup_digraph(m_base=m_base,
+    Simulation.setup_digraph(reshape_origin=reshape_origin,
+                             m_base=m_base,
                              m_low=m_low,
                              m_high=m_high,
                              m_topo=m_topo,
@@ -236,30 +256,55 @@ def run_sim_re(topology,
                              )
     
     Simulation.set_up_populations()
+    
+    if re_mode=='radiation':
+       re_origin=[(4,4)]
+       re_dt=1e-3
+       re_proportion=0.1
+    
+    elif re_mode=='directional':
+         re_origin=[]
+         for i in range(11):
+             re_origin.append((4,i))
+         re_dt=1e-3
+         re_proportion=0.1
+    
+    Simulation.set_up_re(re_origin,
+                         re_dt,
+                         re_proportion,
+                         re_mode,)
 
     genotypes = Simulation.simulate_genotypes(sequence_length=1,
                                               mu=1e-3,
-                                              target_n_snps=100000,
+                                              target_n_snps=200000,
                                               n_print=500)
 
     coord = Simulation.coord.copy()
     grid = Simulation.grid.copy()
     edges = Simulation.edges.copy()
-    digraph = Simulation.digraph.copy()
-    d = digraph.number_of_nodes()
     genotypes = genotypes.astype(np.float64)
     genotypes /= 2
 
-    lamb_grid = np.geomspace(1e-3, 1e3, 13)[::-1]
-    sp_digraph=fitting(genotypes,coord, grid, edges,lamb_grid)
+    lamb_grid = np.geomspace(1e-6, 1e0, 13)[::-1]
+    lamb_warmup=1e0
+    
+    sp_digraph = SpatialDiGraph(genotypes, coord, grid, edges)
+    sp_digraph=fitting(sp_digraph,
+                       lamb_grid,
+                       lamb_warmup)
+    
     return(sp_digraph)
 
-def run_sim_mm(topology,
-               sample_mode,):
+def run_sim_mm(sample_mode,
+               mm_mode):
     
-    N_rows=11
+    if mm_mode=='radiation':
+       N_rows=9
+       
+    elif mm_mode=='directional':
+         N_rows=11
+    
     N_columns=9
-    
     boundary=None
     directional=None
     sink=None
@@ -282,13 +327,19 @@ def run_sim_mm(topology,
     else:
         semi_random_sampling=None
         
+    if mm_mode=='radiation':
+       reshape_origin=[(4,4)]
+    else:
+        reshape_origin=None
+        
     Simulation = Sim(n_rows=N_rows,
                      n_columns=N_columns,
                      n_samples_per_node=n_samples_per_node,
                      node_sample_prob=node_sample_prob,
                      semi_random_sampling=semi_random_sampling,)
     
-    Simulation.setup_digraph(m_base=m_base,
+    Simulation.setup_digraph(reshape_origin=reshape_origin,
+                             m_base=m_base,
                              m_low=m_low,
                              m_high=m_high,
                              m_topo=m_topo,
@@ -300,6 +351,24 @@ def run_sim_mm(topology,
                              )
     
     Simulation.set_up_populations()
+    
+    if mm_mode=='radiation':
+       mm_origin=[(4,4)]
+       mm_dt=1e-1
+       mm_proportion=0.2
+    
+    elif mm_mode=='directional':
+         mm_origin=[]
+         for i in range(11):
+             mm_origin.append((4,i))
+         mm_dt=1e-1
+         mm_proportion=0.2
+         
+    Simulation.set_up_mm(mm_origin,
+                         mm_dt,
+                         mm_proportion,
+                         mm_mode,
+                         )
 
     genotypes = Simulation.simulate_genotypes(sequence_length=1,
                                               mu=1e-3,
@@ -309,11 +378,14 @@ def run_sim_mm(topology,
     coord = Simulation.coord.copy()
     grid = Simulation.grid.copy()
     edges = Simulation.edges.copy()
-    digraph = Simulation.digraph.copy()
-    d = digraph.number_of_nodes()
     genotypes = genotypes.astype(np.float64)
     genotypes /= 2
 
     lamb_grid = np.geomspace(1e-3, 1e3, 13)[::-1]
-    sp_digraph=fitting(genotypes,coord, grid, edges,lamb_grid)
+    lamb_warmup=1e3
+    
+    sp_digraph = SpatialDiGraph(genotypes, coord, grid, edges)
+    sp_digraph=fitting(sp_digraph,
+                       lamb_grid,
+                       lamb_warmup)
     return(sp_digraph)
