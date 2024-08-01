@@ -1,0 +1,24 @@
+name:myenv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11.9
+  - pip
+  - numpy=1.26.4
+  - scipy=1.11.4 (important, later version may cause compatibility issue)
+  - scikit-learn=1.5.1
+  - setuptools=71.0.4
+  - pytest=8.3.2
+  - discreteMarkovChain(pip install)
+  - pandas-plink=2.2.9
+  - matplotlib=3.9.1
+  - click=8.1.7
+  - fiona=1.9.6
+  - shapely=2.0.5
+  - pyproj=3.6.1
+  - cartopy=0.23
+  - networkx=3.3
+  - msprime=1.3.2
+
+
+ 
