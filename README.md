@@ -5,7 +5,7 @@ conda create -n= python=3.11.9
 conda activate 
 ```
 
-We recommend instaling packages using `conda` and pip in the following sequences:
+We recommend installing packages using `conda` and pip in the following sequences:
 
 ```
 conda install numpy=1.26.4  scipy==1.11.4 - scikit-learn==1.5.1
