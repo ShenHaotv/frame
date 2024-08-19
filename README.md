@@ -6,7 +6,7 @@ conda activate
 ```
 Note: For Mac M1 users they'll need to add `--platform=osx-64` to the conda create command to make sure that all the packages are found correctly in the channel-forge channel of conda. 
 
-We recommend installing packages using `conda` and pip in the following sequences:
+The dependencies are listed in dependencies.txt - though we recommend installing packages using `conda` and pip in the following sequence to avoid conflicts in packages:
 
 ```
 conda install numpy==1.26.4 scipy==1.11.4 scikit-learn==1.5.1
