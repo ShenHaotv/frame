@@ -9,9 +9,9 @@ We recommend installing packages using `conda` and pip in the following sequence
 
 ```
 conda install numpy==1.26.4  scipy==1.11.4  scikit-learn==1.5.1
-conda install setuptools==71.0.4 pytest==8.3.2
+conda install setuptools==71.0.4  pytest==8.3.2
 pip install   discreteMarkovChain
-conda install pandas-plink==2.2.9 matplotlib==3.9.1 click==8.1.7
+conda install pandas-plink==2.2.9  matplotlib==3.9.1  click==8.1.7
 conda install fiona==1.9.6
 conda install shapely==2.0.5
 conda install pyproj==3.6.1
