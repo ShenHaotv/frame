@@ -1,4 +1,26 @@
- To get started, setup a `conda` environment:
+
+[![Binder](https://mybinder.org/badge.svg)](https://mybinder.org/v2/gh/NovembreLab/feems/main)
+
+# feems
+
+**F**ast **E**stimation of **E**ffective **M**igration **S**urfaces (`feems`) is a python package 
+implementing a statistical method for inferring and visualizing gene-flow in 
+spatial population genetic data.
+
+The `feems` method and software was developed by Joe Marcus and Wooseok Ha and 
+advised by Rina Foygel Barber and John Novembre. We also used code from Benjamin M. Peter 
+to help construct the spatial graphs. 
+
+For details on the method see our [pre-print](https://www.biorxiv.org/content/10.1101/2020.08.07.242214v1). Note that `feems` is in review so the method could be subject to change.  
+
+Note: MS Windows users will struggle to install feems directly in a 
+Windows environment because at least one of the dependencies does not
+have a Windows port.  A virtual Linux machine should be preferable if 
+you are on a Windows machine. 
+ 
+ 
+ 
+To get started, setup a `conda` environment:
 
 ```
 conda create -n=FRAME python=3.11.9
