@@ -1,7 +1,7 @@
  To get started, setup a `conda` environment:
 
 ```
-conda create -n=aeems python=3.11.9
+conda create -n=frame python=3.11.9
 conda activate 
 ```
 Note: For Mac M1 users they'll need to add `--platform=osx-64` to the conda create command to make sure that all the packages are found correctly in the channel-forge channel of conda. 
