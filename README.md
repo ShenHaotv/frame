@@ -6,8 +6,7 @@
 implementing a statistical method for inferring and visualizing asymmetric gene-flow in 
 spatial population genetic data.
 
-The `FRAME` method and software was developed by Hao Shen and advised by John Novembre. We also used code from Benjamin M. Peter 
-to help construct the spatial graphs. 
+The `FRAME` method and software was developed by Hao Shen and advised by John Novembre. The structure of project was adapted from feems https://github.com/NovembreLab/feems.git. We also used code from Benjamin M. Peter to help construct the spatial graphs. 
  
 To get started, setup a `conda` environment:
 
