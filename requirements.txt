@@ -1,0 +1,16 @@
+numpy
+scipy
+scikit-learn
+setuptools
+pytest
+discreteMarkovChain
+pandas-plink
+matplotlib
+click
+fiona
+shapely
+pyproj
+cartopy
+networkx
+msprime
+
