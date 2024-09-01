@@ -33,7 +33,7 @@ conda install msprime==1.3.2
 ```
 Once the conda environment has been setup with these dependencies we can install `FRAME`:
 
-`pip install git+https://github.com/shenhaotv/FRAME`
+```pip install git+https://github.com/shenhaotv/FRAME```
 
 
 # Running FRAME
