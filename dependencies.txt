@@ -1,4 +1,4 @@
-name:myenv
+name:FRAME_ENV
 channels:
   - conda-forge
 dependencies:
