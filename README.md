@@ -6,12 +6,12 @@
 implementing a statistical method for inferring and visualizing asymmetric gene-flow in 
 spatial population genetic data.
 
-The `FRAME` method and software was developed by Hao Shen and advised by John Novembre. The structure of project was adapted from feems https://github.com/NovembreLab/feems.git. We also used code from Benjamin M. Peter to help construct the spatial graphs. 
+The `frame` method and software was developed by Hao Shen and advised by John Novembre. The structure of project was adapted from feems https://github.com/NovembreLab/feems.git. We also used code from Benjamin M. Peter to help construct the spatial graphs. 
  
 To get started, setup a `conda` environment:
 
 ```
-conda create -n=FRAME_ENV python=3.11.9
+conda create -n=frame-e python=3.11.9
 conda activate 
 ```
 Note: For Mac M1 users they'll need to add `--platform=osx-64` to the conda create command to make sure that all the packages are found correctly in the channel-forge channel of conda. 
