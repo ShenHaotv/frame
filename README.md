@@ -2,7 +2,7 @@
 
 # FRAME
 
-**F**ine **R**esolution **A**symmetric **M**igration **E**stimation (`FRAME`) is a python package 
+**F**ine **R**esolution **A**symmetric **M**igration **E**stimation (`frame`) is a python package 
 implementing a statistical method for inferring and visualizing asymmetric gene-flow in 
 spatial population genetic data.
 
@@ -31,11 +31,11 @@ conda install networkx=3.3
 conda install msprime==1.3.2
 
 ```
-Once the conda environment has been setup with these dependencies we can install `FRAME`:
+Once the conda environment has been setup with these dependencies we can install `frame`:
 
 ```
 
-pip install git+https://github.com/shenhaotv/FRAME
+pip install git+https://github.com/shenhaotv/frame
 
 ```
 
