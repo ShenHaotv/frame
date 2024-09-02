@@ -40,6 +40,6 @@ pip install git+https://github.com/shenhaotv/frame
 ```
 
 
-# Running FRAME
+# Running frame
 
 To help get your analysis started, we provide an example workflow in the [Example.ipynb](https://github.com/ShenHaotv/FRAME/blob/main/docsrc/Example.ipynb) notebook. The notebook analyzes empirical data from North American gray wolves populations published in [Schweizer et al. 2015](https://onlinelibrary.wiley.com/doi/full/10.1111/mec.13364?casa_token=idW0quVPOU0AAAAA:o_ll85b8rDbnW3GtgVeeBUB4oDepm9hQW3Y445HI84LC5itXsiH9dGO-QYGPMsuz0b_7eNkRp8Mf6tlW). 
