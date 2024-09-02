@@ -4,10 +4,10 @@ from pandas_plink import read_plink
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from .utils import prepare_graph_inputs
-from .Spatial_Digraph import SpatialDiGraph
-from .Visualization import Vis
-from .Cross_Validation import run_cv
-from .Digraphstats import Digraphstats
+from .spatial_digraph import SpatialDiGraph
+from .visualization import Vis
+from .cross_validation import run_cv
+from .digraphstats import Digraphstats
 
 data_path="/Users/shenhao/Desktop/Project/data" 
 (bim, fam, G) = read_plink("{}/wolvesadmix".format(data_path))
