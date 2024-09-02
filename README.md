@@ -1,6 +1,6 @@
 
 
-# FRAME
+# frame
 
 **F**ine **R**esolution **A**symmetric **M**igration **E**stimation (`frame`) is a python package 
 implementing a statistical method for inferring and visualizing asymmetric gene-flow in 
