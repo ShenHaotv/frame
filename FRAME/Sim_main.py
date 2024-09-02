@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 import networkx as nx
-from Sim import Sim
-from Spatial_Digraph import SpatialDiGraph
-from Cross_Validation import run_cv
+from .Sim import Sim
+from .Spatial_Digraph import SpatialDiGraph
+from .Cross_Validation import run_cv
 from discreteMarkovChain import markovChain
 
 def fitting(sp_digraph,
