@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
 from sklearn.model_selection import KFold
-from Lyapunov_helper import modified_singular_lyapnov
+from .Lyapunov_helper import modified_singular_lyapnov
 
 def getcontrast(o,b):
     contrast=np.zeros((o-1,o))
