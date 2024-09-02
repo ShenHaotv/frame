@@ -22,7 +22,7 @@ setup(
         "Operating System :: OS Independent",
     ],
     url="https://github.com/shenhaotv/FRAME",
-    packages=["FRAME"],
+    packages=["frame"],
     install_requires=required,
     include_package_data=True,
     package_data={
