@@ -3,7 +3,7 @@ import sys
 import networkx as nx
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
-from Loss import getlaplacian,getcoalesce,loss_wrapper
+from .Loss import getlaplacian,getcoalesce,loss_wrapper
 from discreteMarkovChain import markovChain
 
 def query_node_attributes(digraph, name):
