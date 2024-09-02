@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.stats as stats
 from scipy.sparse import csr_matrix
-from Loss import getindex
+from .Loss import getindex
 
 def benjamini_hochberg(p_values, fdr=0.2):
     """
