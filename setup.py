@@ -9,9 +9,9 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="FRAME",
+    name="frame",
     version=version,
-    description="Fine Resolution Asymmetric Migration Estimation (FRAME)",
+    description="Fine Resolution Asymmetric Migration Estimation (frame)",
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="[Hao Shen]",
