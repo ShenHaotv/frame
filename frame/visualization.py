@@ -476,7 +476,18 @@ class Vis(object):
                  end_pos=self.summary_end_positions[node]
                  color =self.edge_cmap_summary(self.edge_norm_color_summary(self.weight_summary[node]))
                  add_arrow(self.ax,start_pos,end_pos,color,1.5*self.mutation_scale)
-
+         else:
+             nx.draw(
+                self.sp_digraph,
+                ax=self.ax,
+                node_size=0.0,
+                alpha=self.edge_alpha,
+                pos=self.grid,
+                width=self.edge_width,
+                edgelist=list(np.column_stack(self.idx_base)),
+                edge_color=self.edge_color,
+                arrowstyle='-', 
+                arrowsize=2,)
 
     def draw_edge_colorbar(self, use_weights):
         """Draw colorbar"""
