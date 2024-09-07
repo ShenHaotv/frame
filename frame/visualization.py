@@ -11,6 +11,7 @@ from matplotlib.patches import FancyArrowPatch
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from pyproj import Proj
 
+""" Round a positive number to 2 significant figures using ceiling"""
 def round_to_2_sig_fig_ceil(number):
     order_of_magnitude = np.floor(np.log10(number))-1
     scaled_number = number / (10**order_of_magnitude)
@@ -18,9 +19,9 @@ def round_to_2_sig_fig_ceil(number):
     result = rounded_scaled_number * (10**order_of_magnitude)
     result = round(result, -int(order_of_magnitude))
     return result
-    
+ 
+"""Project coordinates"""   
 def project_coords(X, proj):
-    """Project coordinates"""
     P = np.empty(X.shape)
     for i in range(X.shape[0]):
         x, y = proj(X[i, 0], X[i, 1])
@@ -57,10 +58,9 @@ def add_arrowhead_on_linesegment(ax,start,end,color,alpha, mutation_scale):
     arrow = FancyArrowPatch(posA=(cx-dx*0.001,cy-dy*0.001), posB=(cx+dx*0.001, cy+dy*0.001), 
                             arrowstyle='fancy', mutation_scale=mutation_scale, color=color,alpha=alpha,linewidth=0.3)
     ax.add_patch(arrow)   
-    
+ 
+"""Create the arrowhead using FancyArrowPatch"""
 def add_arrow(ax,start,end,color,mutation_scale):
-    # Create the arrowhead using FancyArrowPatch
-
     arrow = FancyArrowPatch(posA=start-(end-start)*0.1, posB=end, 
                             arrowstyle='Simple', mutation_scale=mutation_scale, color=color,linewidth=0.3)
     ax.add_patch(arrow)  
@@ -341,9 +341,9 @@ class Vis(object):
         self.vmax_summary=np.max(log_weight_summary)
         self.vmin_summary=np.min(log_weight_summary)
         self.edge_norm_color_summary=clr.Normalize(vmin=self.vmin_summary, vmax=self.vmax_summary)
-            
+    
+    """Draws the underlying map projection"""        
     def draw_map(self):
-        """Draws the underlying map projection"""
         self.ax.add_feature(cfeature.LAND, facecolor="#f7f7f7", zorder=0)
         self.ax.coastlines(
             self.coastline_m,
@@ -352,8 +352,8 @@ class Vis(object):
             zorder=0,
         )
 
+    """Draw the individual sample coordinates"""
     def draw_samples(self):
-        """Draw the individual sample coordinates"""
         jit_coord = self.coord + np.random.normal(
             loc=0.0, scale=self.sample_pt_jitter_std, size=self.coord.shape
         )
@@ -369,8 +369,8 @@ class Vis(object):
             zorder=self.sample_pt_zorder,
         )
 
-    def draw_obs_nodes(self, use_ids=None):
-        """Draw the observed node coordinates"""     
+    """Draw the observed node coordinates"""   
+    def draw_obs_nodes(self, use_ids=None): 
         obs_ids = self.sp_digraph.h[0]
         obs_grid = self.grid[obs_ids, :]
         if use_ids:
@@ -393,9 +393,9 @@ class Vis(object):
                  alpha=self.obs_node_alpha,
                  color=self.obs_node_color,
                  zorder=self.obs_node_zorder,)
-                 
+    
+    """Draw the edges for different representations"""
     def draw_edges(self, use_weights):
-        """Draw the edges of the graph"""
         if use_weights=='Full':
            nx.draw(self.sp_digraph,
                    ax=self.ax,
@@ -505,8 +505,8 @@ class Vis(object):
                 arrowstyle='-', 
                 arrowsize=2,)
 
+    """Draw colorbar"""
     def draw_edge_colorbar(self, use_weights):
-        """Draw colorbar"""
         self.edge_norm_rep=clr.LogNorm(vmin=1,vmax=100)
         if use_weights=='Summary':
            self.edge_sm = plt.cm.ScalarMappable(cmap=self.edge_cmap_summary, norm=self.edge_norm_rep)
@@ -555,7 +555,8 @@ class Vis(object):
                                          loc="center", fontsize=self.cbar_font_size)
         
         self.edge_cbar.ax.tick_params(labelsize=self.cbar_ticklabelsize)
-        
+    
+    """Draw colorcampass"""
     def draw_edge_colorcampass(self):
         bbox = self.ax.get_position()
         inset_width = bbox.width * self.campass_radius  
@@ -599,7 +600,7 @@ class Vis(object):
                                             '', 'S'],fontsize=self.campass_font_size)
                
     # ------------------------- Plotting Functions -------------------------             
-     
+    """Draw different representations of migration rates"""
     def draw_migration_rates(self,
                              ax,
                              mode,
@@ -618,6 +619,7 @@ class Vis(object):
            
         ax.set_title(f"{mode} graph")
 
+    """Wrapper of representations"""
     def draw_migration_rates_wrapper(self,
                                      axs,
                                      draw_map=True,
@@ -628,7 +630,8 @@ class Vis(object):
                                       mode=mode[i],
                                       draw_map=draw_map,
                                       draw_nodes=draw_nodes)
-           
+    
+    """Draw attributes"""
     def draw_attributes(self,
                         ax,
                         node_scale,
@@ -677,7 +680,8 @@ class Vis(object):
                         alpha=self.obs_node_alpha,)
 
         ax.set_title(f"{attribute}")
-            
+     
+    """Wrapper of attributes"""
     def draw_attributes_wrapper(self,
                                 axs,
                                 node_scale=[5,5,5],
@@ -696,7 +700,8 @@ class Vis(object):
                                   scale,
                                   attribute[i],
                                   draw_map=draw_map,)
-             
+    
+    """Wrapper of representations combined with wrapper pf attiributes"""
     def digraph_wrapper(self,
                         axs,
                         node_scale,
