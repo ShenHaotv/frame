@@ -297,6 +297,9 @@ class Vis(object):
         
         #Parameters for summary graph
         norm_vector=np.zeros(d)
+        length_control=np.zeros(d)
+        Summary_vector=[]
+        Edge_length=[]
         start_positions=[]
         end_positions=[]
           
@@ -308,24 +311,35 @@ class Vis(object):
  
             neighbors = list(self.sp_digraph.neighbors(node))
             edge_length = np.zeros(len(neighbors))
+            norm_migration=np.zeros(len(neighbors))                            #Norm of migration rates in different directions
  
             for i in range(len(neighbors)):
                 neighbor=neighbors[i]
                 coordinate_difference = self.grid[neighbor] - self.grid[node]
-                edge_length[i] = np.linalg.norm(coordinate_difference)
-                summary_vector=summary_vector+ (M[node, neighbor] * coordinate_difference) / edge_length[i]
- 
+                edge_length[i] = np.linalg.norm(coordinate_difference) 
+                migration_vector=(M[node, neighbor] * coordinate_difference) / edge_length[i]
+                summary_vector=summary_vector+migration_vector
+                norm_migration[i]=np.linalg.norm(migration_vector)
+                
             norm_vector[node] = np.linalg.norm(summary_vector)
-              
-            normalized_summary_vector = summary_vector / norm_vector[node]
-            end_position = self.grid[node]+ normalized_summary_vector * np.mean(edge_length)*0.75
+            length_control[node]=np.max(norm_migration)
+            Summary_vector.append(summary_vector)
+            Edge_length.append(edge_length)
+           
+        for i in range(len(norm_vector)):
+            if norm_vector[i]/length_control[i]<1e-3:
+               norm_vector[i]=0
+            else:             
+               normalized_summary_vector=Summary_vector[i]/norm_vector[i]         
+            end_position = self.grid[i]+ normalized_summary_vector * np.mean(Edge_length[i])*0.75
             end_positions.append(end_position)
         
-        self.weight_summary=np.log10(norm_vector)
+        self.weight_summary=norm_vector
+        log_weight_summary=np.log10(norm_vector[norm_vector>0])
         self.summary_start_positions=start_positions
         self.summary_end_positions=end_positions
-        self.vmax_summary=np.max(self.weight_summary)
-        self.vmin_summary=np.min(self.weight_summary)
+        self.vmax_summary=np.max(log_weight_summary)
+        self.vmin_summary=np.min(log_weight_summary)
         self.edge_norm_color_summary=clr.Normalize(vmin=self.vmin_summary, vmax=self.vmax_summary)
             
     def draw_map(self):
@@ -451,7 +465,7 @@ class Vis(object):
                          alpha=self.edge_alpha,
                          pos=self.grid,
                          width=self.edge_width,
-                         edgelist=list(np.column_stack(self.idx_base)),
+                         edgelist=list(np.column_stack(self.idx_full)),
                          edge_color=self.edge_color,
                          arrows=True, 
                          arrowstyle='-',
@@ -472,22 +486,24 @@ class Vis(object):
                 arrowsize=2,)
              
              for node in self.sp_digraph.nodes():
-                 start_pos=self.summary_start_positions[node]
-                 end_pos=self.summary_end_positions[node]
-                 color =self.edge_cmap_summary(self.edge_norm_color_summary(self.weight_summary[node]))
-                 add_arrow(self.ax,start_pos,end_pos,color,1.5*self.mutation_scale)
+                 if self.weight_summary[node]>0:
+                    start_pos=self.summary_start_positions[node]
+                    end_pos=self.summary_end_positions[node]
+                    color =self.edge_cmap_summary(self.edge_norm_color_summary(np.log10(self.weight_summary[node])))
+                    add_arrow(self.ax,start_pos,end_pos,color,self.mutation_scale)
+
         else:
-            nx.draw(
-               self.sp_digraph,
-               ax=self.ax,
-               node_size=0.0,
-               alpha=self.edge_alpha,
-               pos=self.grid,
-               width=self.edge_width,
-               edgelist=list(np.column_stack(self.idx_base)),
-               edge_color=self.edge_color,
-               arrowstyle='-', 
-               arrowsize=2,)
+             nx.draw(
+                self.sp_digraph,
+                ax=self.ax,
+                node_size=0.0,
+                alpha=self.edge_alpha,
+                pos=self.grid,
+                width=self.edge_width,
+                edgelist=list(np.column_stack(self.idx_base)),
+                edge_color=self.edge_color,
+                arrowstyle='-', 
+                arrowsize=2,)
 
     def draw_edge_colorbar(self, use_weights):
         """Draw colorbar"""
@@ -626,14 +642,12 @@ class Vis(object):
         
         if attribute=='Stationary Distribution':
              y=self.sp_digraph.y.copy()
-             logy_min=np.log(np.min(y))
-             logy_max=np.log(np.max(y))
-             node_size=5*(1+node_scale*(np.log(y)-logy_min)/(logy_max-logy_min))
+             y_min=np.min(y)
+             node_size=node_scale*np.log2(y/y_min+1)            
         elif attribute=='Coalescent Rate':  
              gamma=self.sp_digraph.gamma.copy()
-             loggamma_min=np.log(np.min(gamma))
-             loggamma_max=np.log(np.max(gamma))
-             node_size=5*(1+node_scale*(np.log(gamma)-loggamma_min)/(loggamma_max-loggamma_min))
+             gamma_min=np.min(gamma)
+             node_size=node_scale*np.log2(gamma/gamma_min+1)
             
         nx.draw(self.sp_digraph,
                 ax=self.ax,
