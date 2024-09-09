@@ -3,7 +3,7 @@ import sys
 import networkx as nx
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
-from .loss import getlaplacian,getcoalesce,loss_wrapper
+from loss import getlaplacian,getcoalesce,loss_wrapper
 from discreteMarkovChain import markovChain
 
 def query_node_attributes(digraph, name):
@@ -15,7 +15,7 @@ def query_node_attributes(digraph, name):
     return arr
 
 class SpatialDiGraph(nx.DiGraph):
-    def __init__(self, genotypes, sample_pos, node_pos, edges):
+    def __init__(self, genotypes, sample_pos, node_pos, edges, preassignment=None):
         """Represents the spatial network which the data is defined on and
         stores relevant matrices / performs linear algebra routines needed for
         the model and optimization. Inherits from the networkx Graph object.
@@ -25,6 +25,8 @@ class SpatialDiGraph(nx.DiGraph):
             sample_pos (:obj:`numpy.ndarray`): spatial positions for samples
             node_pos (:obj:`numpy.ndarray`):  spatial positions of nodes
             edges (:obj:`numpy.ndarray`): edge array
+            preassignment (:obj:`numpy.ndarray`): artificial preassignment of samples to nodes before the
+                                                  automatic assignment based on closest distance
         """
         # Check inputs
         assert len(genotypes.shape) == 2
@@ -35,6 +37,9 @@ class SpatialDiGraph(nx.DiGraph):
             genotypes.shape[0] == sample_pos.shape[0]
         ), "genotypes and sample positions must be the same size"
 
+        if preassignment is not None:
+           assert len(preassignment.shape) == 2
+           
         # Inherits from networkx Graph object
         super(SpatialDiGraph, self).__init__()
         self._init_digraph(node_pos, edges)  # init graph
@@ -49,6 +54,15 @@ class SpatialDiGraph(nx.DiGraph):
         # Degree of each node
         self.deg=np.array(list(self.degree()))[:,1]
         
+        #preassignment of samples to nodes
+        self.preassignment=preassignment    
+        
+        if self.preassignment is not None:
+           for i in range(self.preassignment.shape[0]):
+               idx = self.preassignment[i][1]
+               self.nodes[idx]["n_samples"] += 1
+               self.nodes[idx]["sample_idx"].append(self.preassignment[i][0])
+            
         # Assign samples to nodes
         self._assign_samples_to_nodes(sample_pos, node_pos)                    
 
@@ -130,26 +144,26 @@ class SpatialDiGraph(nx.DiGraph):
     def _assign_samples_to_nodes(self, sample_pos, node_pos):
        """Assigns each sample to a node on the graph by finding the closest
        node to that sample
+       
+       Args:
+           sample_pos:sample positions
+           node_pos:node positions        
        """
-       n_samples = sample_pos.shape[0]
-       assned_node_idx = np.zeros(n_samples, "int")
-       for i in range(n_samples):
+       if self.preassignment is not None:         
+          samples = np.delete(np.arange(sample_pos.shape[0]),self.preassignment[0])
+       else:
+           samples=np.arange(sample_pos.shape[0])
+       for i in samples:
            dist = (sample_pos[i, :] - node_pos) ** 2
            idx = np.argmin(np.sum(dist, axis=1))
-           assned_node_idx[i] = idx
            self.nodes[idx]["n_samples"] += 1
            self.nodes[idx]["sample_idx"].append(i)
        n_samples_per_node = query_node_attributes(self, "n_samples")
        self.n_observed_nodes = np.sum(n_samples_per_node != 0)
-       self.assned_node_idx = assned_node_idx
     
     def _estimate_allele_frequencies(self):
         """Estimates allele frequencies by maximum likelihood on the observed
-        nodes of the spatial graph
-
-        Args:
-            genotypes (:obj:`numpy.ndarray`): array of diploid genotypes with
-              no missing data
+        nodes of the spatial digraph
         """
         self.n_snps = self.genotypes.shape[1]
 
@@ -171,15 +185,14 @@ class SpatialDiGraph(nx.DiGraph):
     # ------------------------- Optimizers -------------------------
 
 
-
     def fit(
         self,       
         lamb,
         maxls=50,
         factr=1e7,
         m=10,
-        lb=-np.inf,
-        ub=np.inf,
+        lb=-np.Inf,
+        ub=np.Inf,
         maxiter=15000,
         verbose=True,
         logm_init=None,
