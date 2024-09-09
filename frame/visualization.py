@@ -13,11 +13,14 @@ from pyproj import Proj
 
 """ Round a positive number to 2 significant figures using ceiling"""
 def round_to_2_sig_fig_ceil(number):
-    order_of_magnitude = np.floor(np.log10(number))-1
-    scaled_number = number / (10**order_of_magnitude)
-    rounded_scaled_number = np.ceil(scaled_number)
-    result = rounded_scaled_number * (10**order_of_magnitude)
-    result = round(result, -int(order_of_magnitude))
+    if number==0:
+       result=0
+    else:
+        order_of_magnitude = np.floor(np.log10(number))-1
+        scaled_number = number / (10**order_of_magnitude)
+        rounded_scaled_number = np.ceil(scaled_number)
+        result = rounded_scaled_number * (10**order_of_magnitude)
+        result = round(result, -int(order_of_magnitude))
     return result
  
 """Project coordinates"""   
@@ -172,7 +175,6 @@ class Vis(object):
         self.campass_radius = campass_radius 
         self.campass_bbox_to_anchor =campass_bbox_to_anchor
         
-
         # target correlations
         self.target_dist_pt_si_radius=target_dist_pt_size
         self.target_dist_pt_linewidth = target_dist_pt_linewidth
@@ -393,7 +395,20 @@ class Vis(object):
                  alpha=self.obs_node_alpha,
                  color=self.obs_node_color,
                  zorder=self.obs_node_zorder,)
-    
+            
+    def check_nodes_idx(self): 
+        ids=self.sp_digraph.nodes()
+        grid = self.grid[ids, :]
+        for i, j in enumerate(ids):
+            self.ax.text(
+                 grid[i, 0],
+                 grid[i, 1],
+                 str(j),
+                 horizontalalignment="center",
+                 verticalalignment="center",
+                 size=self.obs_node_textsize,
+                 zorder=self.obs_node_zorder,)
+      
     """Draw the edges for different representations"""
     def draw_edges(self, use_weights):
         if use_weights=='Full':
