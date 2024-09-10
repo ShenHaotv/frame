@@ -24,7 +24,7 @@ class SpatialDiGraph(nx.DiGraph):
             genotypes (:obj:`numpy.ndarray`): genotypes for samples
             sample_pos (:obj:`numpy.ndarray`): spatial positions for samples
             node_pos (:obj:`numpy.ndarray`):  spatial positions of nodes
-            edges (:obj:`numpy.ndarray`): edge array
+            edges (:obj:`numpy.ndarray`): edge array (in undirected format)
             preassignment (:obj:`numpy.ndarray`): artificial preassignment of samples to nodes before the
                                                   automatic assignment based on closest distance
         """
@@ -115,7 +115,7 @@ class SpatialDiGraph(nx.DiGraph):
         self.c=self.c0.copy()
   
     def _init_digraph(self, node_pos, edges):
-        """Initialize the graph and related graph objects
+        """Initialize the digraph and related digraph objects
 
         Args:
             node_pos (:obj:`numpy.ndarray`):  spatial positions of nodes
