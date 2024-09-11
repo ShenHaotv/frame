@@ -397,6 +397,7 @@ class Vis(object):
                  zorder=self.obs_node_zorder,)
             
     def check_nodes_idx(self): 
+    """Check the nodes index"""
         ids=self.sp_digraph.nodes()
         grid = self.grid[ids, :]
         for i, j in enumerate(ids):
