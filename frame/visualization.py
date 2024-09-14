@@ -397,7 +397,6 @@ class Vis(object):
                  zorder=self.obs_node_zorder,)
             
     def check_nodes_idx(self): 
-    """Check the nodes index"""
         ids=self.sp_digraph.nodes()
         grid = self.grid[ids, :]
         for i, j in enumerate(ids):
@@ -559,11 +558,11 @@ class Vis(object):
              
         self.edge_cbar.ax.tick_params(which="minor", length=0)
         if use_weights=='Full':
-           self.edge_cbar.ax.set_title("$\mathrm{log}_{10}(\mathrm{m})$", 
+           self.edge_cbar.ax.set_title(r"$\mathrm{log}_{10}\left(\frac{\mathrm{m}}{\widetilde{\mathrm{m}}}\right)$", 
                                         loc="center", fontsize=self.cbar_font_size)
 
         elif use_weights=='Base':
-             self.edge_cbar.ax.set_title(r"$\overline{\mathrm{log}_{10}(\mathrm{m})}$", 
+             self.edge_cbar.ax.set_title(r"$\overline{\mathrm{log}_{10}\left(\frac{\mathrm{m}}{\widetilde{\mathrm{m}}}\right)}$", 
                                          loc="center", fontsize=self.cbar_font_size)
              
         elif use_weights=='Summary':
