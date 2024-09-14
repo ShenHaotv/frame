@@ -33,12 +33,10 @@ setup(
             "data/grid250.shx",
             "data/grid500.shp",
             "data/grid500.shx",
-            "data/wolvesadmix.bed",
-            "data/wolvesadmix.coord",
-            "data/wolvesadmix.fam",
-            "data/wolvesadmix.bim",
-            "data/wolvesadmix.outer",
-            "data/warbler.csv"
+            "data/wolf.txt",
+            "data/wolf.coord",
+            "data/wolf.outer",
+            "data/warbler.txt"
             "data/warbler.coord"
             "data/warbler.outer"
         ]
