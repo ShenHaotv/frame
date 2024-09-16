@@ -15,10 +15,8 @@ def load_tiles(s):
     return [shape(t["geometry"]) for t in tiles]
 
 
-def wrap_america(tile):
+def wrap_up(tile):
     tile = Point(tile)
-    if np.max(tile.xy[0]) < -40 or np.min(tile.xy[0]) < -40:
-        tile = translate(tile, xoff=360.0)
     return tile.xy[0][0], tile.xy[1][0]
 
 
@@ -31,7 +29,7 @@ def create_tile_dict(tiles, bpoly):
     for c, poly in enumerate(tiles):
         x, y = poly.exterior.xy
         points = zip(np.round(x, 3), np.round(y, 3))
-        points = [wrap_america(p) for p in points]
+        points = [wrap_up(p) for p in points]
         for p in points:
             if p not in pts_in:
                 # check if point is in region
@@ -70,14 +68,13 @@ def get_closest_point_to_sample(points, samples):
     return np.array(res)
 
 
-def prepare_graph_inputs(coord, ggrid, translated, buffer=0, outer=None):
-    """Prepares the graph input files for feems adapted from Ben Peters
+def prepare_graph_inputs(coord, ggrid, buffer=0, outer=None):
+    """Prepares the graph input files for frame adapted from Ben Peters
     eems-around-the-world repo
 
     Args:
         sample_pos (:obj:`numpy.ndarray`): spatial positions for samples
         ggrid (:obj:`str`): path to global grid shape file
-        transform (:obj:`bool`): to translate x coordinates
         buffer (:obj:`float`) buffer on the convex hull of sample pts
         outer (:obj:`numpy.ndarray`): q x 2 matrix of coordinates of outer
             polygon
@@ -88,13 +85,10 @@ def prepare_graph_inputs(coord, ggrid, translated, buffer=0, outer=None):
         xy = points.convex_hull.buffer(buffer).exterior.xy
         outer = np.array([xy[0].tolist(), xy[1].tolist()]).T
 
-    if translated:
-        outer[:, 0] = outer[:, 0] + 360.0
-
     # intersect outer with discrete global grid
     bpoly = Polygon(outer)
     bpoly2 = translate(bpoly, xoff=-360.0)
-    tiles2 = load_tiles(ggrid)
+    tiles2 = load_tiles(ggrid)  
     tiles3 = [t for t in tiles2 if bpoly.intersects(t) or bpoly2.intersects(t)]
     pts, rev_pts, e = create_tile_dict(tiles3, bpoly)
 
@@ -104,15 +98,7 @@ def prepare_graph_inputs(coord, ggrid, translated, buffer=0, outer=None):
         grid.append((v[0], v[1]))
     grid = np.array(grid)
 
-    assert grid.shape[0] != 0, "grid is empty changing translation"
-
-    # un-translate
-    if translated:
-        pts = []
-        for p in range(len(rev_pts)):
-            pts.append(Point(rev_pts[p][0] - 360.0, rev_pts[p][1]))
-        grid[:, 0] = grid[:, 0] - 360.0
-        outer[:, 0] = outer[:, 0] - 360.0
+    assert grid.shape[0] != 0, "grid is empty"
 
     # construct edge array
     edges = np.array(list(e))
