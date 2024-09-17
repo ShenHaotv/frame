@@ -33,6 +33,7 @@ setup(
             "data/grid250.shx",
             "data/grid500.shp",
             "data/grid500.shx",
+            "data/wolf.txt",
             "data/wolf.bed",
             "data/wolf.bim",
             "data/wolf.fam",
