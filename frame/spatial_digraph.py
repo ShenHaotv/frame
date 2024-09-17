@@ -3,7 +3,7 @@ import sys
 import networkx as nx
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
-from .loss import getlaplacian,getcoalesce,loss_wrapper
+from loss import getlaplacian,getcoalesce,loss_wrapper
 from discreteMarkovChain import markovChain
 
 def query_node_attributes(digraph, name):
@@ -15,7 +15,7 @@ def query_node_attributes(digraph, name):
     return arr
 
 class SpatialDiGraph(nx.DiGraph):
-    def __init__(self, genotypes, sample_pos, node_pos, edges, preassignment=None):
+    def __init__(self, genotypes, sample_pos, node_pos, edges, sample_plo=None, preassignment=None):
         """Represents the spatial network which the data is defined on and
         stores relevant matrices / performs linear algebra routines needed for
         the model and optimization. Inherits from the networkx Graph object.
@@ -24,7 +24,8 @@ class SpatialDiGraph(nx.DiGraph):
             genotypes (:obj:`numpy.ndarray`): genotypes for samples
             sample_pos (:obj:`numpy.ndarray`): spatial positions for samples
             node_pos (:obj:`numpy.ndarray`):  spatial positions of nodes
-            edges (:obj:`numpy.ndarray`): edge array (in undirected format)
+            edges (:obj:`numpy.ndarray`): edge array(in undirected format)
+            sample_plo (:obj:`numpy.ndarray`): ploidies of the samples
             preassignment (:obj:`numpy.ndarray`): artificial preassignment of samples to nodes before the
                                                   automatic assignment based on closest distance
         """
@@ -57,26 +58,36 @@ class SpatialDiGraph(nx.DiGraph):
         #preassignment of samples to nodes
         self.preassignment=preassignment    
         
+        if sample_plo is None:
+           self.sample_plo=2*np.ones(sample_pos.shape[0])                      # The default ploidy of each sample is set to 2
+        else:
+            self.sample_plo=sample_plo
+        
+        self.n_hap=np.zeros(d)                                                 # Number of haplotypes in each deme, will be updated in the sample assignment step
+        
+        # Assign samples to nodes
         if self.preassignment is not None:
            for i in range(self.preassignment.shape[0]):
-               idx = self.preassignment[i][1]
-               self.nodes[idx]["n_samples"] += 1
-               self.nodes[idx]["sample_idx"].append(self.preassignment[i][0])
+               sample_idx=self.preassignment[i][0]
+               node_idx = self.preassignment[i][1]
+               self.nodes[node_idx]["n_haps"]+=self.sample_plo[sample_idx]
+               self.nodes[node_idx]["sample_idx"].append(sample_idx)
             
-        # Assign samples to nodes
         self._assign_samples_to_nodes(sample_pos, node_pos)                    
 
         self.n_hap=np.zeros(d)
         for i in range (d):
-            self.n_hap[i]=2*self.nodes[i]["n_samples"]                         #The number of haplotypes in each observed deme,which is twice the number of individuals
+            self.n_hap[i]=self.nodes[i]["n_haps"]                              
     
-        observed_nodes_indices=np.nonzero(self.n_hap)[0]
-        observed_nodes_n_hap=self.n_hap[observed_nodes_indices]
-        self.h=(observed_nodes_indices,observed_nodes_n_hap)                   #Indices and number of haplotypes in observed demes
+        observed_nodes_indices=np.nonzero(self.n_hap)[0]                       # Indices of observed demes
+        observed_nodes_n_hap=self.n_hap[observed_nodes_indices]                # Number of haplotypes in each observed deme
+        self.h=(observed_nodes_indices,observed_nodes_n_hap)                   
          
         # estimate allele frequencies at observed locations 
         self.genotypes = genotypes
         self._estimate_allele_frequencies()
+        
+        #Estimate heterozygosities
         self.heterozygosity=2*self.frequencies*(1-self.frequencies)
         self.average_heterozygosity=np.mean(self.heterozygosity,axis=1)
 
@@ -86,7 +97,7 @@ class SpatialDiGraph(nx.DiGraph):
         diag=np.diag(self.S).reshape((1,o))
         self.distance=np.ones((o,1))@diag+diag.T@np.ones((1,o))-2*self.S
         
-        #Get the adhacency matrix
+        #Get the adjacency matrix
         self.adj=nx.adjacency_matrix(self)
        
         #Initilizing the migration rates and coalescent rates
@@ -138,7 +149,7 @@ class SpatialDiGraph(nx.DiGraph):
         for i in range(len(self)):
             self.nodes[i]["idx"] = i
             self.nodes[i]["pos"] = node_pos[i, :]
-            self.nodes[i]["n_samples"] = 0
+            self.nodes[i]["n_haps"] = 0
             self.nodes[i]["sample_idx"] = []
     
     def _assign_samples_to_nodes(self, sample_pos, node_pos):
@@ -156,9 +167,9 @@ class SpatialDiGraph(nx.DiGraph):
        for i in samples:
            dist = (sample_pos[i, :] - node_pos) ** 2
            idx = np.argmin(np.sum(dist, axis=1))
-           self.nodes[idx]["n_samples"] += 1
+           self.nodes[idx]["n_haps"]+=self.sample_plo[i]
            self.nodes[idx]["sample_idx"].append(i)
-       n_samples_per_node = query_node_attributes(self, "n_samples")
+       n_samples_per_node = query_node_attributes(self, "n_haps")
        self.n_observed_nodes = np.sum(n_samples_per_node != 0)
     
     def _estimate_allele_frequencies(self):
@@ -179,8 +190,8 @@ class SpatialDiGraph(nx.DiGraph):
             s = sample_idx[node_id]
 
             # compute mean at each node
-            allele_counts = np.mean(self.genotypes[s, :], axis=0)
-            self.frequencies[i, :] = allele_counts
+            frequencies = np.sum(self.genotypes[s, :], axis=0)/np.sum(self.sample_plo[s])
+            self.frequencies[i, :] = frequencies
                                
     # ------------------------- Optimizers -------------------------
 

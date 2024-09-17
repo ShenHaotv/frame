@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 import networkx as nx
-from .sim import Sim
-from .spatial_digraph import SpatialDiGraph
-from .cross_validation import run_cv
+from sim import Sim
+from spatial_digraph import SpatialDiGraph
+from cross_validation import run_cv
 from discreteMarkovChain import markovChain
 
 def fitting(sp_digraph,
@@ -169,7 +169,6 @@ def run_sim_migration(topology,
     digraph = Simulation.digraph.copy()
     d = digraph.number_of_nodes()
     genotypes = genotypes.astype(np.float64)
-    genotypes /= 2
 
     M=nx.adjacency_matrix(digraph, weight="weight").toarray()
     d=M.shape[0]
@@ -281,7 +280,6 @@ def run_sim_re(sample_mode,
     grid = Simulation.grid.copy()
     edges = Simulation.edges.copy()
     genotypes = genotypes.astype(np.float64)
-    genotypes /= 2
 
     lamb_grid = np.geomspace(1e-6, 1e0, 13)[::-1]
     lamb_warmup=1e0
@@ -377,7 +375,6 @@ def run_sim_mm(sample_mode,
     grid = Simulation.grid.copy()
     edges = Simulation.edges.copy()
     genotypes = genotypes.astype(np.float64)
-    genotypes /= 2
 
     lamb_grid = np.geomspace(1e-3, 1e3, 13)[::-1]
     lamb_warmup=1e3
