@@ -169,8 +169,8 @@ class SpatialDiGraph(nx.DiGraph):
            idx = np.argmin(np.sum(dist, axis=1))
            self.nodes[idx]["n_haps"]+=self.sample_plo[i]
            self.nodes[idx]["sample_idx"].append(i)
-       n_samples_per_node = query_node_attributes(self, "n_haps")
-       self.n_observed_nodes = np.sum(n_samples_per_node != 0)
+       n_haps_per_node = query_node_attributes(self, "n_haps")
+       self.n_observed_nodes = np.sum(n_haps_per_node != 0)
     
     def _estimate_allele_frequencies(self):
         """Estimates allele frequencies by maximum likelihood on the observed
