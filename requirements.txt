@@ -4,7 +4,6 @@ scikit-learn
 setuptools
 pytest
 discreteMarkovChain
-pandas-plink
 matplotlib
 click
 fiona
@@ -13,4 +12,4 @@ pyproj
 cartopy
 networkx
 msprime
-
+pandas-plink
