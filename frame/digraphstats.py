@@ -57,7 +57,7 @@ class Digraphstats(object):
           ax.plot(self.D_fit_data,D_linear,zorder=2, color="orange", linestyle='--', linewidth=1)
           corrcoef=np.corrcoef(self.D_data,self.D_fit_data)[0,1]
           ax.text(0.6, 0.3, "R²={:.4f}".format(corrcoef**2),fontsize=15,transform=ax.transAxes)
-          ax.set_xlabel('Fitted Genetic Ditance(($\lambda=\lambda_\mathrm{CV}$)',fontsize=15)
+          ax.set_xlabel('Fitted Genetic Distance(($\lambda=\lambda_\mathrm{CV}$)',fontsize=15)
           ax.set_ylabel('Empirical Genetic Distance',fontsize=15)
       
       def z_score_distribution(self,ax):
