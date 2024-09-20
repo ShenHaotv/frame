@@ -180,4 +180,5 @@ def error(sp_digraph,
     err=np.sum(difference**2)/n_snps
 
     gc.collect()
+              
     return err
