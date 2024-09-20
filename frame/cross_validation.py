@@ -1,4 +1,5 @@
 import numpy as np
+import gc
 from copy import deepcopy
 from sklearn.model_selection import KFold
 from .lyapunov_helper import modified_singular_lyapnov
@@ -177,5 +178,6 @@ def error(sp_digraph,
     difference=prediction-frequencies_test_con
     n_snps = sp_digraph.n_snps
     err=np.sum(difference**2)/n_snps
-        
+
+    gc.collect()
     return err
