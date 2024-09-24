@@ -63,9 +63,10 @@ def add_arrowhead_on_linesegment(ax,start,end,color,alpha, mutation_scale):
     ax.add_patch(arrow)   
  
 """Create the arrowhead using FancyArrowPatch"""
-def add_arrow(ax,start,end,color,mutation_scale):
+def add_arrow(ax,start,end,color, alpha, mutation_scale):
     arrow = FancyArrowPatch(posA=start-(end-start)*0.1, posB=end, 
-                            arrowstyle='Simple', mutation_scale=mutation_scale, color=color,linewidth=0.3)
+                            arrowstyle='Simple', mutation_scale=mutation_scale, 
+                            color=color,alpha=alpha,linewidth=0.3)
     ax.add_patch(arrow)  
 
 class Vis(object):
@@ -198,30 +199,21 @@ class Vis(object):
                        "#00AACC",
                        "#007A99",]  
         
-        self.colors_summary= ["#CCFDFF",
-                              "#99F8FF",
-                              "#66F0FF",
-                              "#33E4FF",
-                              "#00AACC",
-                              "#007A99",]  
         
         self.edge_cmap = clr.LinearSegmentedColormap.from_list(
              "colors", self.colors, N=256)
-        
-        self.edge_cmap_summary = clr.LinearSegmentedColormap.from_list(
-             "colors_summary", self.colors_summary, N=256)
          
         theta = np.linspace(0, 2 * np.pi, 256)  
         red = np.abs(1 - theta / np.pi) + np.sin(theta) / 4
         blue = 1 + np.sin(theta) / 2 - red
         green = np.zeros_like(theta)  
  
-        self.colors_diff= np.vstack([red, green, blue]).T
-        self.edge_cmap_diff=clr.LinearSegmentedColormap.from_list(
-             "colors", self.colors_diff, N=256)
+        self.colors_angle= np.vstack([red, green, blue]).T
+        self.angle_cmap=clr.LinearSegmentedColormap.from_list(
+             "colors", self.colors_angle, N=256)
+        
+        self.angle_norm=clr.Normalize(vmin=0.0, vmax=2*np.pi)
                         
-        self.dist_cmap = plt.get_cmap("viridis_r")
-
         # plotting maps
         if self.projection is not None:
            self.proj = Proj(projection.proj4_init)
@@ -291,7 +283,6 @@ class Vis(object):
            self.vmax_diff=np.max(self.norm_log_weights_diff)
            self.vmax_diff=round_to_2_sig_fig_ceil(self.vmax_diff)
                                
-           self.edge_norm_color_diff=clr.Normalize(vmin=0.0, vmax=2*np.pi)
            self.edge_norm_alpha_diff=clr.Normalize(vmin=self.vmin_diff, vmax=self.vmax_diff)
            self.alpha_diff=self.edge_norm_alpha_diff(self.norm_log_weights_diff)
         else:
@@ -336,13 +327,17 @@ class Vis(object):
             end_position = self.grid[i]+ normalized_summary_vector * np.mean(Edge_length[i])*0.75
             end_positions.append(end_position)
         
-        self.weight_summary=norm_vector
-        log_weight_summary=np.log10(norm_vector[norm_vector>0])
-        self.summary_start_positions=start_positions
-        self.summary_end_positions=end_positions
-        self.vmax_summary=np.max(log_weight_summary)
-        self.vmin_summary=np.min(log_weight_summary)
-        self.edge_norm_color_summary=clr.Normalize(vmin=self.vmin_summary, vmax=self.vmax_summary)
+        self.summary_start_positions=np.array(start_positions)
+        self.summary_end_positions=np.array(end_positions)
+        direction=self.summary_end_positions-self.summary_start_positions
+        dx,dy=direction[:,0],direction[:,1]
+        self.angle_summary=np.arctan2(dy, dx)
+        
+        self.weights_summary=norm_vector
+        self.transformed_weights_summary=np.log10(1+norm_vector/np.min(self.weights))
+        self.vmax_summary=round_to_2_sig_fig_ceil(np.max(self.transformed_weights_summary))
+        self.edge_norm_alpha_summary=clr.Normalize(vmin=0, vmax=self.vmax_summary)
+        self.alpha_summary=self.edge_norm_alpha_summary(self.transformed_weights_summary)
     
     """Draws the underlying map projection"""        
     def draw_map(self):
@@ -410,8 +405,8 @@ class Vis(object):
                  zorder=self.obs_node_zorder,)
       
     """Draw the edges for different representations"""
-    def draw_edges(self, use_weights):
-        if use_weights=='Full':
+    def draw_edges(self, mode):
+        if mode=='Full':
            nx.draw(self.sp_digraph,
                    ax=self.ax,
                    node_size=0.1,
@@ -434,7 +429,7 @@ class Vis(object):
                color=self.edge_cmap(self.edge_norm(weight))
                add_arrowhead_on_arc(self.ax,start_pos, end_pos, self.arc_rad,color,self.mutation_scale)
           
-        elif use_weights=='Base':
+        elif mode=='Base':
              nx.draw(self.sp_digraph,
                      ax=self.ax,
                      node_size=0.1,
@@ -449,13 +444,13 @@ class Vis(object):
                      arrowstyle='-', 
                      arrowsize=2,)      
                      
-        elif use_weights=='Difference':
+        elif mode=='Difference':
              if len(self.norm_log_weights_diff)>0:
                 nx.draw(
                 self.sp_digraph,
                 ax=self.ax,
                 node_size=0.1,
-                edge_cmap=self.edge_cmap_diff,
+                edge_cmap=self.angle_cmap,
                 alpha=self.alpha_diff,
                 pos=self.grid,
                 width=2.5*self.edge_width,
@@ -467,10 +462,10 @@ class Vis(object):
                 arrowsize=2,
                 )
                  
-                for edge, weight,alpha in zip(np.column_stack(self.idx_diff),self.edge_angle_radians,self.alpha_diff):               
+                for edge, angle,alpha in zip(np.column_stack(self.idx_diff),self.edge_angle_radians,self.alpha_diff):               
                     start_node, end_node = edge
                     start_pos, end_pos = self.grid[start_node], self.grid[end_node]
-                    color=self.edge_cmap_diff(self.edge_norm_color_diff(weight))
+                    color=self.angle_cmap(self.angle_norm(angle))
                     add_arrowhead_on_linesegment(self.ax,start_pos,end_pos,color,alpha,2*self.mutation_scale)
                     
              else:
@@ -486,7 +481,7 @@ class Vis(object):
                          arrowstyle='-',
                          arrowsize=2,)
                  
-        elif use_weights=='Summary':
+        elif mode=='Summary':
              nx.draw(
                 self.sp_digraph,
                 ax=self.ax,
@@ -501,11 +496,12 @@ class Vis(object):
                 arrowsize=2,)
              
              for node in self.sp_digraph.nodes():
-                 if self.weight_summary[node]>0:
+                 if self.weights_summary[node]>0:
                     start_pos=self.summary_start_positions[node]
                     end_pos=self.summary_end_positions[node]
-                    color =self.edge_cmap_summary(self.edge_norm_color_summary(np.log10(self.weight_summary[node])))
-                    add_arrow(self.ax,start_pos,end_pos,color,self.mutation_scale)
+                    color =self.angle_cmap(self.angle_norm(self.angle_summary[node]))
+                    alpha=self.alpha_summary[node]
+                    add_arrow(self.ax,start_pos,end_pos,color,alpha,self.mutation_scale)
 
         else:
              nx.draw(
@@ -521,12 +517,9 @@ class Vis(object):
                 arrowsize=2,)
 
     """Draw colorbar"""
-    def draw_edge_colorbar(self, use_weights):
+    def draw_edge_colorbar(self, mode):
         self.edge_norm_rep=clr.LogNorm(vmin=1,vmax=100)
-        if use_weights=='Summary':
-           self.edge_sm = plt.cm.ScalarMappable(cmap=self.edge_cmap_summary, norm=self.edge_norm_rep)
-        else:
-            self.edge_sm = plt.cm.ScalarMappable(cmap=self.edge_cmap, norm=self.edge_norm_rep)
+        self.edge_sm = plt.cm.ScalarMappable(cmap=self.edge_cmap, norm=self.edge_norm_rep)
         
         self.edge_sm._A = []
         self.edge_axins = inset_axes(
@@ -544,35 +537,25 @@ class Vis(object):
         self.edge_cbar.locator = self.edge_tick_locator
         cbar_min, cbar_max = self.edge_sm.get_clim()
        
-        if use_weights=='Summary':
-           self.edge_cbar.set_ticks([cbar_min,cbar_max])
-           range_summary=round_to_2_sig_fig_ceil(self.vmax_summary-self.vmin_summary)
-           self.edge_cbar.set_ticklabels([r'$0$',
-                                          f'${{{range_summary}}}$'],fontsize=self.cbar_ticklabelsize)
-           
-        else:
-            self.edge_cbar.set_ticks([cbar_min,10, cbar_max])
-            self.edge_cbar.set_ticklabels([f'${{{-self.range}}}$',
-                                           r'$0$', 
-                                           f'${{{self.range}}}$'],fontsize=self.cbar_ticklabelsize)
+        self.edge_cbar.set_ticks([cbar_min,10, cbar_max])
+        self.edge_cbar.set_ticklabels([f'${{{-self.range}}}$',
+                                       r'$0$', 
+                                       f'${{{self.range}}}$'],fontsize=self.cbar_ticklabelsize)
              
         self.edge_cbar.ax.tick_params(which="minor", length=0)
-        if use_weights=='Full':
+        
+        if mode=='Full':
            self.edge_cbar.ax.set_title(r"$\mathrm{log}_{10}\left(\frac{\mathrm{m}}{\widetilde{\mathrm{m}}}\right)$", 
                                         loc="center", fontsize=self.cbar_font_size)
 
-        elif use_weights=='Base':
+        elif mode=='Base':
              self.edge_cbar.ax.set_title(r"$\overline{\mathrm{log}_{10}\left(\frac{\mathrm{m}}{\widetilde{\mathrm{m}}}\right)}$", 
                                          loc="center", fontsize=self.cbar_font_size)
-             
-        elif use_weights=='Summary':
-             self.edge_cbar.ax.set_title(r"$\mathrm{log}_{10}(\mathrm{m_{s}})$", 
-                                         loc="center", fontsize=self.cbar_font_size)
-        
+                 
         self.edge_cbar.ax.tick_params(labelsize=self.cbar_ticklabelsize)
     
     """Draw colorcampass"""
-    def draw_edge_colorcampass(self):
+    def draw_edge_colorcampass(self, mode):
         bbox = self.ax.get_position()
         inset_width = bbox.width * self.campass_radius  
         inset_height = bbox.height * self.campass_radius  
@@ -609,10 +592,15 @@ class Vis(object):
 
         # Customizing ticks
         self.campass_axins.set_xticks(np.pi/180. * np.linspace(0,  360, 4, endpoint=False))
-          
-        self.campass_axins.set_xticklabels([f'${{{self.vmax_diff}}}$', 
-                                            "$\mathrm{△log}_{10}(\mathrm{m})$",
-                                            '', 'S'],fontsize=self.campass_font_size)
+        
+        if mode=='Difference':
+           self.campass_axins.set_xticklabels([f'${{{self.vmax_diff}}}$', 
+                                              "$\mathrm{△log}_{10}(\mathrm{m})$",
+                                               '', 'S'],fontsize=self.campass_font_size)
+        elif mode=='Summary':
+            self.campass_axins.set_xticklabels([f'${{{self.vmax_summary}}}$', 
+                                               r"$\mathrm{log}_{10}(1+\frac{\mathrm{m_{s}}}{\mathrm{m_{min}}})$",
+                                                '', 'S'],fontsize=self.campass_font_size)
                
     # ------------------------- Plotting Functions -------------------------             
     """Draw different representations of migration rates"""
@@ -624,11 +612,11 @@ class Vis(object):
         self.ax = ax
         if draw_map is True:
            self.draw_map()
-        self.draw_edges(use_weights=mode)
-        if mode=='Difference':
-           self.draw_edge_colorcampass()
+        self.draw_edges(mode=mode)
+        if mode=='Difference' or mode=='Summary':
+           self.draw_edge_colorcampass(mode=mode)
         else:
-            self.draw_edge_colorbar(use_weights=mode,)
+            self.draw_edge_colorbar(mode=mode)
         if draw_nodes is True:
            self.draw_obs_nodes()
            
@@ -639,10 +627,10 @@ class Vis(object):
                                      axs,
                                      draw_map=True,
                                      draw_nodes=True):
-        mode=['Base','Full','Difference','Summary']
+        modes=['Base','Full','Difference','Summary']
         for i in range(4):  
             self.draw_migration_rates(ax=axs[i],
-                                      mode=mode[i],
+                                      mode=modes[i],
                                       draw_map=draw_map,
                                       draw_nodes=draw_nodes)
     
