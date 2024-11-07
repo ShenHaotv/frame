@@ -211,7 +211,7 @@ class Sim(object):
 
           Parameters:
              origin (list): The origin points of demographic events represented as (column, row) indices.
-             mode (str): Either 'radiation' for radial expansion or 'directional' for directional expansion.
+             mode (str): Either 'large_scale_sink' or 'two_sided_large_scale_directional'.
        
           Notes:
            - This function modifies the directed graph associated with the instance by updating nodes' 'level' 
@@ -249,12 +249,12 @@ class Sim(object):
           while instrumental_set:
                 instrumental_set = set()
                 for deme in boundary:
-                    if mode=='radiation':                                     
+                    if mode=='large_scale_sink':                                     
                        for neighbour in list(self.digraph.neighbors(deme)):
                            if neighbour not in existing_set:
                               instrumental_set.add(neighbour)
                               self.digraph.nodes[neighbour]['ancestors'].add(deme)
-                    elif mode=='directional':
+                    elif mode=='two_sided_large_scale_directional':
                          if deme%self.n_columns!=0:
                             if deme-1 not in existing_set:
                                instrumental_set.add(deme-1)
@@ -343,7 +343,7 @@ class Sim(object):
              re_origin (list): The origin points for range expansion, specified as (column, row) indices.
              re_dt (float): The time interval between successive expansion events.
              re_proportion (float): The proportion of the population that moves to a new deme during expansion.
-             re_mode (str): Specifies the mode of expansion, either 'radiation' (outward from the center) or 'directional' .
+             re_mode (str): Specifies the mode of expansion, either 'large_scale_sink' or 'two_sided_large_scale_directional'.
 
           Notes:
             - This function adjusts population parameters, sets migration rates to zero between demes, and handles
@@ -409,7 +409,7 @@ class Sim(object):
              mm_origin (list): The origin points for mass migration, specified as (column, row) indices.
              mm_dt (float): The time interval between successive mass migration events.
              mm_proportion (float): The proportion of the population that migrates out of each deme during each event.
-             mm_mode (str): Specifies the mode of migration, either 'radiation' (outward from the center) or 'directional' (linear, e.g., west-to-east).
+             mm_mode (str): Specifies the mode of migration, either 'large_scale_sink' or 'two_sided_large_scale_directional'.
 
           Notes:
            - This function configures mass migration events based on level sets calculated from the origin points.
