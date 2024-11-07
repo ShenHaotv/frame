@@ -62,13 +62,17 @@ def add_arrowhead_on_linesegment(ax,start,end,color,alpha, mutation_scale):
                             arrowstyle='fancy', mutation_scale=mutation_scale, color=color,alpha=alpha,linewidth=0.3)
     ax.add_patch(arrow)   
  
-"""Create the arrowhead using FancyArrowPatch"""
-def add_arrow(ax,start,end,color, alpha, mutation_scale):
-    arrow = FancyArrowPatch(posA=start-(end-start)*0.1, posB=end, 
-                            arrowstyle='Simple', mutation_scale=mutation_scale, 
+"""Create a new arrow (other than  the edges) using FancyArrowPatch"""
+def add_arrow(ax,start,end,color,alpha, mutation_scale):
+    edge = FancyArrowPatch(posA=start-(end-start)*0.1, posB=end, 
+                            arrowstyle='-', mutation_scale=mutation_scale, 
+                            color=color,alpha=alpha,linewidth=0.3)
+    ax.add_patch(edge)  
+    arrow=edge = FancyArrowPatch(posA=end-(end-start)*0.001, posB=end+(end-start)*0.001, 
+                            arrowstyle='Fancy', mutation_scale=2*mutation_scale, 
                             color=color,alpha=alpha,linewidth=0.3)
     ax.add_patch(arrow)  
-
+    
 class Vis(object):
     def __init__(
         self,
@@ -324,7 +328,7 @@ class Vis(object):
                norm_vector[i]=0
             else:             
                normalized_summary_vector=Summary_vector[i]/norm_vector[i]         
-            end_position = self.grid[i]+ normalized_summary_vector * np.mean(Edge_length[i])*0.75
+            end_position = self.grid[i]+ normalized_summary_vector * np.mean(Edge_length[i])*0.6
             end_positions.append(end_position)
         
         self.summary_start_positions=np.array(start_positions)
@@ -332,6 +336,7 @@ class Vis(object):
         direction=self.summary_end_positions-self.summary_start_positions
         dx,dy=direction[:,0],direction[:,1]
         self.angle_summary=np.arctan2(dy, dx)
+        self.angle_summary = np.where(self.angle_summary < 0, self.angle_summary + 2 * np.pi, self.angle_summary)
         
         self.weights_summary=norm_vector
         self.transformed_weights_summary=np.log10(1+norm_vector/np.min(self.weights))
@@ -453,7 +458,7 @@ class Vis(object):
                 edge_cmap=self.angle_cmap,
                 alpha=self.alpha_diff,
                 pos=self.grid,
-                width=2.5*self.edge_width,
+                width=self.edge_width,
                 edgelist=list(np.column_stack(self.idx_diff)),
                 edge_color=self.edge_angle_radians,
                 edge_vmin=0.0,
@@ -501,7 +506,7 @@ class Vis(object):
                     end_pos=self.summary_end_positions[node]
                     color =self.angle_cmap(self.angle_norm(self.angle_summary[node]))
                     alpha=self.alpha_summary[node]
-                    add_arrow(self.ax,start_pos,end_pos,color,alpha,self.mutation_scale)
+                    add_arrow(self.ax,start_pos,end_pos,color,alpha, self.mutation_scale)
 
         else:
              nx.draw(
@@ -627,7 +632,7 @@ class Vis(object):
                                      axs,
                                      draw_map=True,
                                      draw_nodes=True):
-        modes=['Base','Full','Difference','Summary']
+        modes=['Full','Base','Difference','Summary']
         for i in range(4):  
             self.draw_migration_rates(ax=axs[i],
                                       mode=modes[i],
