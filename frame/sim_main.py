@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 import networkx as nx
-from .sim import Sim
-from .spatial_digraph import SpatialDiGraph
-from .cross_validation import run_cv
+from sim import Sim
+from spatial_digraph import SpatialDiGraph
+from cross_validation import run_cv
 from discreteMarkovChain import markovChain
 
 def fitting(sp_digraph,
@@ -73,53 +73,62 @@ def run_sim_migration(topology,
     N_rows=11
     N_columns=9
     
-    if topology=='boundary' or topology=='showcasing':
+    if topology=='boundary' or topology=='small_scale_patterns':
        boundary=[5]
     else:
         boundary=None
-        
-    if topology=='directional' or topology=='anisotropic':
-       directional=[]
-       for j in range(N_rows):
-           directional.append(((0, j), N_columns-1, 'E'))
-           if topology=='anisotropic':
-              directional.append(((N_columns-1, j), N_columns-1, 'W'))
-    elif topology=='showcasing':
+    
+    if topology=='small_scale_directional':
+       directional=[((0,4), 8, 'E')] 
+    
+    elif topology=='large_scale_directional' or topology=='anisotropic':
          directional=[]
-         r=int((N_columns-1)/2)
-         directional.append(((r, 1), r, 'E'))
-         directional.append(((r, 1), r, 'W'))
-         directional.append(((r, 9), r, 'E'))
-         directional.append(((r, 9), r, 'W'))
+         for j in range(N_rows):
+             directional.append(((0, j), 8, 'E'))
+             if topology=='anisotropic':
+                directional.append(((8, j), 8, 'W'))
+                
+    elif topology=='two_sided_large_scale_directional':
+         directional=[]
+         for j in range(N_rows):
+             directional.append(((0, j), 4, 'E'))
+             directional.append(((8, j), 4, 'W'))
+    
+    elif topology=='small_scale_patterns':
+         directional=[]
+         directional.append(((4, 1), 4, 'E'))
+         directional.append(((4, 1), 4, 'W'))
+         directional.append(((0, 9), 4, 'E'))
+         directional.append(((8, 9), 4, 'W'))
     else:
         directional=None
         
-    if topology=='sink':
+    if topology=='small_scale_sink':
        sink=[((4,5),1)]
-    elif topology=='radiation':
+    elif topology=='large_scale_sink':
          sink=[((4,5),3)]
-    elif topology=='showcasing':
-         sink=[((2,3),1),((2,7),1)]
+    elif topology=='small_scale_patterns':
+         sink=[((2,3),1)]
     else:
         sink=None
         
-    if topology=='source':
+    if topology=='small_scale_source':
        source=[((4,5),1)]
-    elif topology=='admixture':
+    elif topology=='large_scale_source':
          source=[((4,5),3)]
-    elif topology=='showcasing':
-         source=[((6,3),1),((6,7),1)]
+    elif topology=='small_scale_patterns':
+         source=[((6,3),1)]
     else:
         source=None
 
     if topology=='circle':
        circle=[((4,4), (5,4), (5,5),(5,6),(4,6),(3,5))] 
-    elif topology=='showcasing':
-         circle=[((4,2), (5,2), (4,3)),((4,8), (4,7), (5,8))] 
+    elif topology=='small_scale_patterns':
+         circle=[((2,6),(3,6),(3,7),(3,8),(2,8),(1,7)),((5,6),(6,6),(7,6),(6,7),(6,8),(5,7))] 
     else:
         circle=None
        
-    if topology=='showcasing':
+    if topology=='small_scale_patterns':
        m_topo=10
     else:
         m_topo=3
@@ -132,7 +141,7 @@ def run_sim_migration(topology,
     node_sample_prob=1
     
     if sample_mode=='sparse':
-       node_sample_prob=0.25  
+       node_sample_prob=0.25
     
     if sample_mode=='semi_random':
        semi_random_sampling=True
@@ -200,9 +209,9 @@ def run_sim_migration(topology,
 def run_sim_re(sample_mode,
                re_mode,):
     
-    if re_mode=='radiation':
+    if re_mode=='large_scale_sink':
        N_rows=9
-    elif re_mode=='directional':
+    elif re_mode=='two_sided_large_scale_directional':
          N_rows=11
          
     N_columns=9
@@ -229,7 +238,7 @@ def run_sim_re(sample_mode,
     else:
         semi_random_sampling=None
         
-    if re_mode=='radiation':
+    if re_mode=='large_scale_sink':
        reshape_origin=[(4,4)]
     else:
         reshape_origin=None
@@ -254,12 +263,12 @@ def run_sim_re(sample_mode,
     
     Simulation.set_up_populations()
     
-    if re_mode=='radiation':
+    if re_mode=='large_scale_sink':
        re_origin=[(4,4)]
        re_dt=1e-3
        re_proportion=0.1
     
-    elif re_mode=='directional':
+    elif re_mode=='two_sided_large_scale_directional':
          re_origin=[]
          for i in range(11):
              re_origin.append((4,i))
@@ -294,10 +303,10 @@ def run_sim_re(sample_mode,
 def run_sim_mm(sample_mode,
                mm_mode):
     
-    if mm_mode=='radiation':
+    if mm_mode=='large_scale_sink':
        N_rows=9
        
-    elif mm_mode=='directional':
+    elif mm_mode=='two_sided_large_scale_directional':
          N_rows=11
     
     N_columns=9
@@ -323,7 +332,7 @@ def run_sim_mm(sample_mode,
     else:
         semi_random_sampling=None
         
-    if mm_mode=='radiation':
+    if mm_mode=='large_scale_sink':
        reshape_origin=[(4,4)]
     else:
         reshape_origin=None
@@ -348,17 +357,17 @@ def run_sim_mm(sample_mode,
     
     Simulation.set_up_populations()
     
-    if mm_mode=='radiation':
+    if mm_mode=='large_scale_sink':
        mm_origin=[(4,4)]
        mm_dt=1e-1
        mm_proportion=0.2
     
-    elif mm_mode=='directional':
+    elif mm_mode=='two_sided_large_scale_directional':
          mm_origin=[]
          for i in range(11):
              mm_origin.append((4,i))
          mm_dt=1e-1
-         mm_proportion=0.2
+         mm_proportion=0.5
          
     Simulation.set_up_mm(mm_origin,
                          mm_dt,
