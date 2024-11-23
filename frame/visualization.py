@@ -117,7 +117,7 @@ class Vis(object):
         target_dist_pt_alpha=1.0,
         target_dist_pt_zorder=2,
         seed=1996,
-        arc_rad = 0.2,
+        arc_rad =-0.2,
         mutation_scale=10,
         abs_max=None,
         scale=None,
@@ -601,11 +601,11 @@ class Vis(object):
         if mode=='Difference':
            self.campass_axins.set_xticklabels([f'${{{self.vmax_diff}}}$', 
                                               "$\mathrm{△log}_{10}(\mathrm{m})$",
-                                               '', 'S'],fontsize=self.campass_font_size)
+                                               '', ''],fontsize=self.campass_font_size)
         elif mode=='Summary':
             self.campass_axins.set_xticklabels([f'${{{self.vmax_summary}}}$', 
                                                r"$\mathrm{log}_{10}(1+\frac{\mathrm{m_{s}}}{\mathrm{m_{min}}})$",
-                                                '', 'S'],fontsize=self.campass_font_size)
+                                                '', ''],fontsize=self.campass_font_size)
                
     # ------------------------- Plotting Functions -------------------------             
     """Draw different representations of migration rates"""
@@ -618,13 +618,14 @@ class Vis(object):
         if draw_map is True:
            self.draw_map()
         self.draw_edges(mode=mode)
+        
         if mode=='Difference' or mode=='Summary':
            self.draw_edge_colorcampass(mode=mode)
         else:
             self.draw_edge_colorbar(mode=mode)
         if draw_nodes is True:
            self.draw_obs_nodes()
-           
+   
         ax.set_title(f"{mode} graph")
 
     """Wrapper of representations"""
