@@ -48,6 +48,7 @@ def add_arrowhead_on_arc(ax,start,end,arc_rad,color, mutation_scale):
     ax.add_patch(arrow)
     
 """Function to add an arrowhead on the line segment """
+
 def add_arrowhead_on_linesegment(ax,start,end,color,alpha, mutation_scale):
     x1, y1 = start
     x2, y2 = end
@@ -59,18 +60,18 @@ def add_arrowhead_on_linesegment(ax,start,end,color,alpha, mutation_scale):
 
     # Create the arrowhead using FancyArrowPatch
     arrow = FancyArrowPatch(posA=(cx-dx*0.001,cy-dy*0.001), posB=(cx+dx*0.001, cy+dy*0.001), 
-                            arrowstyle='fancy', mutation_scale=mutation_scale, color=color,alpha=alpha,linewidth=0.3)
-    ax.add_patch(arrow)   
- 
+                            arrowstyle='fancy', mutation_scale=mutation_scale, color=color,alpha=alpha,linewidth=0)
+    ax.add_patch(arrow)      
+    
 """Create a new arrow (other than  the edges) using FancyArrowPatch"""
-def add_arrow(ax,start,end,color,alpha, mutation_scale):
+def add_arrow(ax,start,end,color,mutation_scale,alpha,line_width):
     edge = FancyArrowPatch(posA=start-(end-start)*0.1, posB=end, 
                             arrowstyle='-', mutation_scale=mutation_scale, 
-                            color=color,alpha=alpha,linewidth=0.3)
+                            color=color,alpha=1,linewidth=1.5*line_width)
     ax.add_patch(edge)  
     arrow=edge = FancyArrowPatch(posA=end-(end-start)*0.001, posB=end+(end-start)*0.001, 
-                            arrowstyle='Fancy', mutation_scale=2*mutation_scale, 
-                            color=color,alpha=alpha,linewidth=0.3)
+                            arrowstyle='Fancy', mutation_scale=1.5*mutation_scale, 
+                            color=color,alpha=alpha,linewidth=0)
     ax.add_patch(arrow)  
     
 class Vis(object):
@@ -187,7 +188,6 @@ class Vis(object):
         self.target_dist_pt_zorder = target_dist_pt_zorder
         self.abs_max=abs_max
         
-        self.weights_assignment()
         # colors
         self.colors = ["#994000",
                        "#CC5800",
@@ -217,7 +217,7 @@ class Vis(object):
              "colors", self.colors_angle, N=256)
         
         self.angle_norm=clr.Normalize(vmin=0.0, vmax=2*np.pi)
-                        
+                
         # plotting maps
         if self.projection is not None:
            self.proj = Proj(projection.proj4_init)
@@ -225,7 +225,7 @@ class Vis(object):
            self.grid = project_coords(self.grid, self.proj)
            
         self.weights_assignment()
-         
+       
     # ------------------------- Helping functions -------------------------        
     
     def weights_assignment(self):
@@ -289,6 +289,9 @@ class Vis(object):
                                
            self.edge_norm_alpha_diff=clr.Normalize(vmin=self.vmin_diff, vmax=self.vmax_diff)
            self.alpha_diff=self.edge_norm_alpha_diff(self.norm_log_weights_diff)
+           self.color_diff=self.angle_cmap(self.angle_norm(self.edge_angle_radians))
+           for i in range(3):
+               self.color_diff[:,i]=self.color_diff[:,i]*self.alpha_diff+(1-self.alpha_diff)
         else:
             self.vmax_diff=0
         
@@ -410,7 +413,7 @@ class Vis(object):
                  zorder=self.obs_node_zorder,)
       
     """Draw the edges for different representations"""
-    def draw_edges(self, mode):
+    def draw_edges(self, mode=None):
         if mode=='Full':
            nx.draw(self.sp_digraph,
                    ax=self.ax,
@@ -441,7 +444,7 @@ class Vis(object):
                      edge_cmap=self.edge_cmap,
                      alpha=self.edge_alpha,
                      pos=self.grid,
-                     width=5*self.edge_width,
+                     width=3*self.edge_width,
                      edgelist=list(np.column_stack(self.idx_base)),
                      edge_color=self.norm_log_weights_base,
                      edge_vmin=self.vmin,
@@ -455,23 +458,19 @@ class Vis(object):
                 self.sp_digraph,
                 ax=self.ax,
                 node_size=0.1,
-                edge_cmap=self.angle_cmap,
-                alpha=self.alpha_diff,
+                alpha=self.edge_alpha,
                 pos=self.grid,
-                width=self.edge_width,
+                width=1.5*self.edge_width,
                 edgelist=list(np.column_stack(self.idx_diff)),
-                edge_color=self.edge_angle_radians,
-                edge_vmin=0.0,
-                edge_vmax=2*np.pi,
+                edge_color=self.color_diff,
                 arrowstyle='-',
                 arrowsize=2,
                 )
                  
-                for edge, angle,alpha in zip(np.column_stack(self.idx_diff),self.edge_angle_radians,self.alpha_diff):               
+                for edge, color in zip(np.column_stack(self.idx_diff),self.color_diff):               
                     start_node, end_node = edge
                     start_pos, end_pos = self.grid[start_node], self.grid[end_node]
-                    color=self.angle_cmap(self.angle_norm(angle))
-                    add_arrowhead_on_linesegment(self.ax,start_pos,end_pos,color,alpha,2*self.mutation_scale)
+                    add_arrowhead_on_linesegment(self.ax,start_pos,end_pos,color,self.edge_alpha,1.5*self.mutation_scale)
                     
              else:
                  nx.draw(self.sp_digraph,
@@ -504,9 +503,12 @@ class Vis(object):
                  if self.weights_summary[node]>0:
                     start_pos=self.summary_start_positions[node]
                     end_pos=self.summary_end_positions[node]
-                    color =self.angle_cmap(self.angle_norm(self.angle_summary[node]))
+                    angle_color =self.angle_cmap(self.angle_norm(self.angle_summary[node]))
                     alpha=self.alpha_summary[node]
-                    add_arrow(self.ax,start_pos,end_pos,color,alpha, self.mutation_scale)
+                    color=np.ones(4)
+                    for i in range(3):
+                        color[i]=angle_color[i]*alpha+1-alpha
+                    add_arrow(self.ax,start_pos,end_pos,color,self.mutation_scale,self.edge_alpha,self.edge_width)
 
         else:
              nx.draw(
@@ -602,50 +604,63 @@ class Vis(object):
            self.campass_axins.set_xticklabels([f'${{{self.vmax_diff}}}$', 
                                               "$\mathrm{△log}_{10}(\mathrm{m})$",
                                                '', ''],fontsize=self.campass_font_size)
+           
         elif mode=='Summary':
             self.campass_axins.set_xticklabels([f'${{{self.vmax_summary}}}$', 
                                                r"$\mathrm{log}_{10}(1+\frac{\mathrm{m_{s}}}{\mathrm{m_{min}}})$",
                                                 '', ''],fontsize=self.campass_font_size)
-               
+            
+        self.campass_axins.tick_params(axis='x', pad=0)  
+        for i, label in enumerate(self.campass_axins.get_xticklabels()):
+            if i == 1: 
+               label.set_y(0.5)        
     # ------------------------- Plotting Functions -------------------------             
     """Draw different representations of migration rates"""
     def draw_migration_rates(self,
                              ax,
                              mode,
                              draw_map=True,
-                             draw_nodes=True,):
+                             draw_nodes=True,
+                             set_title=True,
+                             title_font_size=10,
+                             ):
         self.ax = ax
         if draw_map is True:
            self.draw_map()
         self.draw_edges(mode=mode)
-        
+
         if mode=='Difference' or mode=='Summary':
            self.draw_edge_colorcampass(mode=mode)
         else:
             self.draw_edge_colorbar(mode=mode)
         if draw_nodes is True:
            self.draw_obs_nodes()
-   
-        ax.set_title(f"{mode} graph")
+        
+        if set_title is True:
+           ax.set_title(f"{mode} graph",pad=3,fontsize=title_font_size)
 
     """Wrapper of representations"""
     def draw_migration_rates_wrapper(self,
                                      axs,
                                      draw_map=True,
-                                     draw_nodes=True):
+                                     draw_nodes=True,
+                                     set_title=True):
         modes=['Full','Base','Difference','Summary']
         for i in range(4):  
             self.draw_migration_rates(ax=axs[i],
                                       mode=modes[i],
                                       draw_map=draw_map,
-                                      draw_nodes=draw_nodes)
+                                      draw_nodes=draw_nodes,
+                                      set_title=set_title)
     
     """Draw attributes"""
     def draw_attributes(self,
                         ax,
                         node_scale,
                         attribute,
-                        draw_map=True,):
+                        draw_map=True,
+                        set_title=True,
+                        title_font_size=10):
         self.ax=ax
         if draw_map is True:
            self.draw_map()
@@ -656,7 +671,7 @@ class Vis(object):
              y=self.sp_digraph.y.copy()
              y_min=np.min(y)
              node_size=node_scale*np.log2(y/y_min+1)            
-        elif attribute=='Coalescent Rate':  
+        elif attribute=='Coalescence Rate':  
              gamma=self.sp_digraph.gamma.copy()
              gamma_min=np.min(gamma)
              node_size=node_scale*np.log2(gamma/gamma_min+1)
@@ -687,8 +702,9 @@ class Vis(object):
                         obs_grid[:, 1],
                         s=5*(1+node_scale*(het-het_min)/(het_max-het_min)),
                         alpha=self.obs_node_alpha,)
-
-        ax.set_title(f"{attribute}")
+        
+        if set_title is True:
+           ax.set_title(f"{attribute}",pad=3,fontsize=title_font_size)
      
     """Wrapper of attributes"""
     def draw_attributes_wrapper(self,
@@ -698,7 +714,7 @@ class Vis(object):
          attribute=['Sample Size and Position',
                     'Heterozygosity',
                     'Stationary Distribution',
-                    'Coalescent Rate']
+                    'Coalescence Rate']
          
          for i in range(4):
              if i==0:
