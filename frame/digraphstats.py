@@ -123,4 +123,3 @@ class Digraphstats(object):
               v.ax.text(v.grid[int(pair[1])][0],v.grid[int(pair[1])][1], str(int(pair_observed[1])),
                         horizontalalignment="center", verticalalignment="bottom",
                         size=v.obs_node_textsize*0.8, zorder=v.obs_node_zorder,)
-   
