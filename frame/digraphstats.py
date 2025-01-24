@@ -48,17 +48,18 @@ class Digraphstats(object):
           z_score=(logratio-mean_logratio)/np.sqrt(var_logratio) 
           self.z_score=z_score
      
-      def distance_regression(self,ax):         
+      def distance_regression(self,ax,ms=3,labelsize=6, R2_fontsize=10,legend_fontsize=10):         
           coefficients = np.polyfit(self.D_fit_data,self.D_data,1)
           m, b = coefficients
           D_linear=m*self.D_fit_data + b
           
-          ax.plot(self.D_fit_data,self.D_data,'ko')  
+          ax.plot(self.D_fit_data,self.D_data,'ko', ms=ms)  
+          ax.tick_params(axis='both', which='major', labelsize=labelsize)
           ax.plot(self.D_fit_data,D_linear,zorder=2, color="orange", linestyle='--', linewidth=1)
           corrcoef=np.corrcoef(self.D_data,self.D_fit_data)[0,1]
-          ax.text(0.6, 0.3, "R²={:.4f}".format(corrcoef**2),fontsize=15,transform=ax.transAxes)
-          ax.set_xlabel('Fitted Genetic Distance(($\lambda=\lambda_\mathrm{CV}$)',fontsize=15)
-          ax.set_ylabel('Empirical Genetic Distance',fontsize=15)
+          ax.text(0.6, 0.3, "R²={:.3f}".format(corrcoef**2),fontsize=R2_fontsize,transform=ax.transAxes)
+          ax.set_xlabel('Fitted genetic distance',fontsize=legend_fontsize)
+          ax.set_ylabel('Empirical genetic distance',fontsize=legend_fontsize)
       
       def z_score_distribution(self,ax):
           ax.hist(self.z_score, bins='auto', color='blue', alpha=0.7)
