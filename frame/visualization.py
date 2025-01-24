@@ -694,5 +694,3 @@ class Vis(object):
         
         if set_title is True:
            ax.set_title(f"{attribute}",pad=3,fontsize=title_font_size)
-     
-  
