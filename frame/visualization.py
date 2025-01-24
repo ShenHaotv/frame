@@ -592,6 +592,9 @@ class Vis(object):
                                                     inset_width, inset_height], 
                                                     projection='polar')
 
+        self.campass_axins.spines['polar'].set_edgecolor('white')
+        self.campass_axins.grid(False)
+        
         self.campass_axins.pcolormesh(theta, r, np.rad2deg(theta), 
                                    color=colors.reshape(-1, 3), shading='auto')
         
@@ -639,20 +642,6 @@ class Vis(object):
         if set_title is True:
            ax.set_title(f"{mode} graph",pad=3,fontsize=title_font_size)
 
-    """Wrapper of representations"""
-    def draw_migration_rates_wrapper(self,
-                                     axs,
-                                     draw_map=True,
-                                     draw_nodes=True,
-                                     set_title=True):
-        modes=['Full','Base','Difference','Summary']
-        for i in range(4):  
-            self.draw_migration_rates(ax=axs[i],
-                                      mode=modes[i],
-                                      draw_map=draw_map,
-                                      draw_nodes=draw_nodes,
-                                      set_title=set_title)
-    
     """Draw attributes"""
     def draw_attributes(self,
                         ax,
@@ -706,38 +695,4 @@ class Vis(object):
         if set_title is True:
            ax.set_title(f"{attribute}",pad=3,fontsize=title_font_size)
      
-    """Wrapper of attributes"""
-    def draw_attributes_wrapper(self,
-                                axs,
-                                node_scale=[5,5,5],
-                                draw_map=True,):
-         attribute=['Sample Size and Position',
-                    'Heterozygosity',
-                    'Stationary Distribution',
-                    'Coalescence Rate']
-         
-         for i in range(4):
-             if i==0:
-                scale=None
-             else:
-                 scale=node_scale[i-1]
-             self.draw_attributes(axs[i],
-                                  scale,
-                                  attribute[i],
-                                  draw_map=draw_map,)
-    
-    """Wrapper of representations combined with wrapper pf attiributes"""
-    def digraph_wrapper(self,
-                        axs,
-                        node_scale,
-                        draw_map=True,
-                        draw_nodes=True,):
-                 
-        self.draw_migration_rates_wrapper([axs[0, 0], axs[0, 1], axs[0, 2],axs[0,3]],
-                                                  draw_map=draw_map,
-                                                  draw_nodes=draw_nodes)
-           
-        self.draw_attributes_wrapper([axs[1, 0], axs[1, 1], axs[1, 2],axs[1,3]],
-                                     node_scale=node_scale,
-                                     draw_map=draw_map)
-       
+  
