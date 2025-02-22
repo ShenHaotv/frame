@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
-from lyapunov_helper import modified_singular_lyapnov
+from .lyapunov_helper import modified_singular_lyapnov
 from discreteMarkovChain import markovChain
 
 """ Construct contrast matrix"""
