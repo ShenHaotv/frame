@@ -77,12 +77,7 @@ class Digraphstats(object):
           abs_Z_matrix=(abs_Z_triu+abs_Z_triu.T).toarray()
           ax.imshow(abs_Z_matrix, cmap='viridis',interpolation='nearest')
           ax.set_xlabel('|z-score|',fontsize=15)
-          
-      def fitting_wrapper(self,axs):
-          self.distance_regression(axs[0])
-          self.z_score_distribution(axs[1])
-          self.draw_heatmap(axs[2])
-             
+              
       def outlier_detection(self,fdr):
           p_value_neg=stats.norm.cdf(self.z_score)
           p_value_pos=1-p_value_neg
