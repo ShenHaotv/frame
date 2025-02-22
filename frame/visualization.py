@@ -109,6 +109,7 @@ class Vis(object):
         campass_font_size=10,
         campass_radius=0.15,
         campass_bbox_to_anchor=(0.05, 0.1),
+        campass_pad=0.5,
         ell_scaler=np.sqrt(3.0) / 6.0,
         ell_edgecolor="gray",
         ell_lw=0.2,
@@ -180,6 +181,7 @@ class Vis(object):
         self.campass_font_size = campass_font_size
         self.campass_radius = campass_radius 
         self.campass_bbox_to_anchor =campass_bbox_to_anchor
+        self.campass_pad=campass_pad
         
         # target correlations
         self.target_dist_pt_si_radius=target_dist_pt_size
@@ -285,8 +287,7 @@ class Vis(object):
         if len(self.norm_log_weights_diff)>0:
            self.vmin_diff=0      
            self.vmax_diff=np.max(self.norm_log_weights_diff)
-           self.vmax_diff=round_to_2_sig_fig_ceil(self.vmax_diff)
-                               
+           self.vmax_diff=round_to_2_sig_fig_ceil(self.vmax_diff) 
            self.edge_norm_alpha_diff=clr.Normalize(vmin=self.vmin_diff, vmax=self.vmax_diff)
            self.alpha_diff=self.edge_norm_alpha_diff(self.norm_log_weights_diff)
            self.color_diff=self.angle_cmap(self.angle_norm(self.edge_angle_radians))
@@ -591,8 +592,13 @@ class Vis(object):
         self.campass_axins=self.ax.figure.add_axes([inset_left, inset_bottom, 
                                                     inset_width, inset_height], 
                                                     projection='polar')
-
-        self.campass_axins.spines['polar'].set_edgecolor('white')
+         
+        
+        self.campass_axins.plot(np.linspace(0, 2 * np.pi, 100), 
+                        np.full(100, 1/3), color='black', lw=0.5, linestyle=':')
+        self.campass_axins.plot(np.linspace(0, 2 * np.pi, 100), 
+                        np.full(100, 2/3), color='black', lw=0.5, linestyle='--')
+        #self.campass_axins.spines['polar'].set_edgecolor('white')
         self.campass_axins.grid(False)
         
         self.campass_axins.pcolormesh(theta, r, np.rad2deg(theta), 
@@ -604,19 +610,25 @@ class Vis(object):
         self.campass_axins.set_xticks(np.pi/180. * np.linspace(0,  360, 4, endpoint=False))
         
         if mode=='Difference':
-           self.campass_axins.set_xticklabels([f'${{{self.vmax_diff}}}$', 
-                                              "$\mathrm{△log}_{10}(\mathrm{m})$",
-                                               '', ''],fontsize=self.campass_font_size)
+           v1=self.vmax_diff/3
+           v2=2*self.vmax_diff/3
+           v3=self.vmax_diff
+           self.campass_axins.set_xticklabels([ f'      ····· {v1:.2f}\n      ─ ─ {v2:.2f}\n      ───{v3:.2f}', 
+                                                r"$\mathrm{△log}_{10}(\mathrm{m})$",  
+                                                '', ''], fontsize=self.campass_font_size)
            
         elif mode=='Summary':
-            self.campass_axins.set_xticklabels([f'${{{self.vmax_summary}}}$', 
+             v1=self.vmax_summary/3
+             v2=2*self.vmax_summary/3
+             v3=self.vmax_summary
+             self.campass_axins.set_xticklabels([f'      ····· {v1:.2f}\n      ─ ─ {v2:.2f}\n      ───{v3:.2f}', 
                                                r"$\mathrm{log}_{10}(1+\frac{\mathrm{m_{s}}}{\mathrm{m_{min}}})$",
                                                 '', ''],fontsize=self.campass_font_size)
             
-        self.campass_axins.tick_params(axis='x', pad=0)  
+        self.campass_axins.tick_params(axis='x', pad=0)      
         for i, label in enumerate(self.campass_axins.get_xticklabels()):
             if i == 1: 
-               label.set_y(0.5)        
+               label.set_y(self.campass_pad)        
     # ------------------------- Plotting Functions -------------------------             
     """Draw different representations of migration rates"""
     def draw_migration_rates(self,
@@ -625,6 +637,8 @@ class Vis(object):
                              draw_map=True,
                              draw_nodes=True,
                              set_title=True,
+                             draw_colorbar=True,
+                             draw_colorcampass=True,
                              title_font_size=10,
                              ):
         self.ax = ax
@@ -633,15 +647,17 @@ class Vis(object):
         self.draw_edges(mode=mode)
 
         if mode=='Difference' or mode=='Summary':
-           self.draw_edge_colorcampass(mode=mode)
-        else:
-            self.draw_edge_colorbar(mode=mode)
+           if draw_colorcampass is True:
+              self.draw_edge_colorcampass(mode=mode)
+        elif draw_colorbar is True:           
+             self.draw_edge_colorbar(mode=mode)
         if draw_nodes is True:
            self.draw_obs_nodes()
         
         if set_title is True:
            ax.set_title(f"{mode} graph",pad=3,fontsize=title_font_size)
 
+    
     """Draw attributes"""
     def draw_attributes(self,
                         ax,
@@ -657,9 +673,9 @@ class Vis(object):
         node_size=0.1
         
         if attribute=='Stationary Distribution':
-             y=self.sp_digraph.y.copy()
-             y_min=np.min(y)
-             node_size=node_scale*np.log2(y/y_min+1)            
+             pi=self.sp_digraph.pi.copy()
+             pi_min=np.min(pi)
+             node_size=node_scale*np.log2(pi/pi_min+1)            
         elif attribute=='Coalescence Rate':  
              gamma=self.sp_digraph.gamma.copy()
              gamma_min=np.min(gamma)
@@ -694,3 +710,55 @@ class Vis(object):
         
         if set_title is True:
            ax.set_title(f"{attribute}",pad=3,fontsize=title_font_size)
+           
+           
+    """Wrapper of representations"""
+    def draw_migration_rates_wrapper(self,
+                                     axs,
+                                     draw_map=True,
+                                     draw_nodes=True,
+                                     set_title=True,):
+        modes=['Full','Difference']
+        #modes=['Full','Base','Difference','Summary']
+        for i in range(2):  
+            self.draw_migration_rates(ax=axs[i],
+                                      mode=modes[i],
+                                      draw_map=draw_map,
+                                      draw_nodes=draw_nodes,
+                                      set_title=set_title,)
+     
+    """Wrapper of attributes"""
+    def draw_attributes_wrapper(self,
+                                axs,
+                                node_scale=[5,5,5],
+                                draw_map=True,):
+         attribute=['Sample Size and Position',
+                    'Heterozygosity',
+                    'Stationary Distribution',
+                    'Coalescence Rate']
+         
+         for i in range(4):
+             if i==0:
+                scale=None
+             else:
+                 scale=node_scale[i-1]
+             self.draw_attributes(axs[i],
+                                  scale,
+                                  attribute[i],
+                                  draw_map=draw_map,)
+    
+    """Wrapper of representations combined with wrapper pf attiributes"""
+    def digraph_wrapper(self,
+                        axs,
+                        node_scale,
+                        draw_map=True,
+                        draw_nodes=True,):
+                 
+        self.draw_migration_rates_wrapper([axs[0, 0], axs[0, 1], axs[0, 2],axs[0,3]],
+                                                  draw_map=draw_map,
+                                                  draw_nodes=draw_nodes)
+           
+        self.draw_attributes_wrapper([axs[1, 0], axs[1, 1], axs[1, 2],axs[1,3]],
+                                     node_scale=node_scale,
+                                     draw_map=draw_map)
+       
