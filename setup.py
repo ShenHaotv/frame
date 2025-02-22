@@ -27,21 +27,19 @@ setup(
     include_package_data=True,
     package_data={
         "": [
-            "data/grid100.shp",
-            "data/grid100.shx",
-            "data/grid250.shp",
-            "data/grid250.shx",
-            "data/grid500.shp",
-            "data/grid500.shx",
-            "data/wolf.txt",
+            "data/grid110.shp",
+            "data/grid110.shx",
+            "data/grid220.shp",
+            "data/grid220.shx",
+            "data/grid440.shp",
+            "data/grid440.shx",
+            "data/grid880.shp",
+            "data/grid880.shx",
             "data/wolf.bed",
             "data/wolf.bim",
             "data/wolf.fam",
             "data/wolf.coord",
             "data/wolf.outer",
-            "data/warbler.txt"
-            "data/warbler.coord"
-            "data/warbler.outer"
         ]
     },
     license="MIT",
