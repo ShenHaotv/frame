@@ -718,9 +718,8 @@ class Vis(object):
                                      draw_map=True,
                                      draw_nodes=True,
                                      set_title=True,):
-        modes=['Full','Difference']
-        #modes=['Full','Base','Difference','Summary']
-        for i in range(2):  
+        modes=['Full','Base','Difference','Summary']
+        for i in range(4):  
             self.draw_migration_rates(ax=axs[i],
                                       mode=modes[i],
                                       draw_map=draw_map,
