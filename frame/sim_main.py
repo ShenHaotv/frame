@@ -169,8 +169,8 @@ def run_sim_migration(topology,
 
     genotypes = Simulation.simulate_genotypes(sequence_length=1,
                                               mu=1e-3,
-                                              target_n_snps=1,
-                                              n_print=1)
+                                              target_n_snps=100000,
+                                              n_print=500)
 
     coord = Simulation.coord.copy()
     grid = Simulation.grid.copy()
@@ -201,9 +201,9 @@ def run_sim_migration(topology,
     lamb_warmup=1e3
     
     sp_digraph = SpatialDiGraph(genotypes, coord, grid, edges)
-    """sp_digraph=fitting(sp_digraph,
+    sp_digraph=fitting(sp_digraph,
                        lamb_grid,
-                       lamb_warmup)"""
+                       lamb_warmup)
     return(ground_truth,sp_digraph)
 
 def run_sim_re(sample_mode):
