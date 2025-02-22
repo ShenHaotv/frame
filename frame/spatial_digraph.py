@@ -3,7 +3,7 @@ import sys
 import networkx as nx
 import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
-from .loss import getlaplacian,getcoalesce,loss_wrapper
+from loss import getlaplacian,getcoalesce,loss_wrapper
 from discreteMarkovChain import markovChain
 
 def query_node_attributes(digraph, name):
@@ -72,7 +72,7 @@ class SpatialDiGraph(nx.DiGraph):
                node_idx = self.preassignment[i][1]
                self.nodes[node_idx]["n_haps"]+=self.sample_plo[sample_idx]
                self.nodes[node_idx]["sample_idx"].append(sample_idx)
-            
+        
         self._assign_samples_to_nodes(sample_pos, node_pos)                    
 
         self.n_hap=np.zeros(d)
@@ -276,12 +276,12 @@ class SpatialDiGraph(nx.DiGraph):
         self.L=getlaplacian(self.m,self.M)                                      #Laplacian
         mc=markovChain(np.identity(d)-self.L)
         mc.computePi('linear')
-        self.y=mc.pi.reshape(d)                                                 #Stationary distribution  
-        if np.min(self.y)<=0:
+        self.pi=mc.pi.reshape(d)                                                 #Stationary distribution, represented as a column vector  
+        if np.min(self.pi)<=0:
            mc.computePi('power') 
-        self.y=mc.pi.reshape(d)   
-        self.y=self.y/np.sum(self.y)     
-        self.gamma=self.c[0]/(self.y**self.c[1])                                #Coalescent rates
+        self.pi=mc.pi.reshape(d)   
+        self.pi=self.pi/np.sum(self.pi)     
+        self.gamma=self.c[0]/(self.pi**self.c[1])                                #Coalescent rates
         coalesce_wrapper=getcoalesce(self.L, self.gamma, self.S, self.h)
         self.T=coalesce_wrapper[1]                                              # Expected pairwise coalescence time
         self.T_bar=coalesce_wrapper[2]
