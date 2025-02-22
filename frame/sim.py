@@ -36,15 +36,14 @@ class Sim(object):
              
    
       def setup_digraph(self,
-                        reshape_origin=None,
                         m_base=0.1,
                         m_low=0.3,
                         m_high=3,
                         m_topo=3,
                         boundary=None,
                         directional=None,
-                        sink=None,
-                        source=None,
+                        converging_zone=None,
+                        diverging_zone=None,
                         circle=None,
                         ):  
 
@@ -52,20 +51,19 @@ class Sim(object):
           Sets up a directed graph (digraph) for simulating migration patterns in a spatial population model.
 
           Parameters:
-             reshape_origin (None or list): Whether to reshape the network into a hexagon based on the origin given by the list
              m_base (float): Base migration rate.
              m_low (float): Multiplier for lower migration rate areas.
              m_high (float): Multiplier for higher migration rate areas. 
-             m_topo (float): Mulyiplier for topological patterns like directional flows, sink, pattern etc
+             m_topo (float): Mulyiplier for topological patterns
              boundary (list): Specifies regions with different migration rates.
-             directional (list): Specifies directional migration flows.
-             sink (list): Specifies areas acting as migration sinks.
-             source (list): Specifies areas acting as migration sources.
-             circle (list): Specifies nodes forming cyclic migration routes.
+             directional (list): Specifies directional ancestral flows.
+             converging_zone (list): Specifies areas acting as zone of converging ancestries
+             diverging_zone (list): Specifies areas acting as zone of diverging ancestries.
+             circle (list): Specifies nodes forming zone of cyclic ancestries.
 
           Notes:
            - The function initializes a triangular lattice graph and converts it to a directed graph.
-           - Migration rates are adjusted based on specified patterns (boundary, directional, sinks, sources, circles).
+           - Migration rates are adjusted based on specified patterns.
            - Sample sizes for populations are set based on the sampling model.
            
            """       
@@ -99,8 +97,8 @@ class Sim(object):
                           digraph[(i+1,x[1])][(i,x[1])]['weight']*=m_topo      
                           
           # Set up migration sinks                     
-          if sink!=None:
-             for (si,r) in sink:                                               #center and radius         
+          if converging_zone!=None:
+             for (si,r) in converging_zone:                                    #center and radius         
                  a={si}
                  b={si}
                  for i in range(r):
@@ -114,8 +112,8 @@ class Sim(object):
                      a=c
             
           # Set up migration sources
-          if source!=None:
-             for (so,r) in source:
+          if diverging_zone!=None:
+             for (so,r) in diverging_zone:
                  a={so} 
                  b={so}
                  for i in range(r):
@@ -155,11 +153,7 @@ class Sim(object):
           digraph = nx.convert_node_labels_to_integers(digraph)
           
           self.digraph=digraph
-          self.reshape_origin=reshape_origin
           self.new_index_map=None                                              
-          
-          if reshape_origin is not None:            
-             self.reshape()                                                    #Reshape the network into a hexagon with the given origin
                
           graph = self.digraph.to_undirected()
           pos_dict = nx.get_node_attributes(self.digraph, 'pos')
@@ -180,38 +174,15 @@ class Sim(object):
       
           return ()
       
-      def reshape(self): 
-          
-          """
-          Reshape the network into a hexagon with the given origin
-          
-          """
-          self.compute_level_set(origin=self.reshape_origin,                   #Compute the level sets based on the origin
-                                 mode="radiation")
-          
-          r=int((min(self.n_rows,self.n_columns)-1)/2)
-          
-          for i in list(self.digraph.nodes()):
-              if self.digraph.nodes[i]['level']>r:
-                 self.digraph.remove_node(i)
-          
-          new_index_map = {old_idx: new_idx for new_idx, old_idx in enumerate(self.digraph.nodes())} #The map between the old index and new index
-          
-          self.digraph = nx.relabel_nodes(self.digraph, new_index_map)         #Reindex the new digraph
-          self.new_index_map=new_index_map
-          
-          return()
       
       def compute_level_set(self,
-                            origin,
-                            mode,):
+                            origin):
             
           """
           Compute the level set and assign potential ancestors to nodes.
 
           Parameters:
              origin (list): The origin points of demographic events represented as (column, row) indices.
-             mode (str): Either 'large_scale_sink' or 'two_sided_large_scale_directional'.
        
           Notes:
            - This function modifies the directed graph associated with the instance by updating nodes' 'level' 
@@ -249,20 +220,14 @@ class Sim(object):
           while instrumental_set:
                 instrumental_set = set()
                 for deme in boundary:
-                    if mode=='large_scale_sink':                                     
-                       for neighbour in list(self.digraph.neighbors(deme)):
-                           if neighbour not in existing_set:
-                              instrumental_set.add(neighbour)
-                              self.digraph.nodes[neighbour]['ancestors'].add(deme)
-                    elif mode=='two_sided_large_scale_directional':
-                         if deme%self.n_columns!=0:
-                            if deme-1 not in existing_set:
-                               instrumental_set.add(deme-1)
-                               self.digraph.nodes[deme-1]['ancestors'].add(deme)
-                         if (deme+1)%self.n_columns!=0:
-                             if deme+1 not in existing_set:
-                                instrumental_set.add(deme+1)
-                                self.digraph.nodes[deme+1]['ancestors'].add(deme)
+                    if deme%self.n_columns!=0:
+                       if deme-1 not in existing_set:
+                          instrumental_set.add(deme-1)
+                          self.digraph.nodes[deme-1]['ancestors'].add(deme)
+                       if (deme+1)%self.n_columns!=0:
+                           if deme+1 not in existing_set:
+                              instrumental_set.add(deme+1)
+                              self.digraph.nodes[deme+1]['ancestors'].add(deme)
                                  
                 # Update the sets for the next iteration               
                 existing_set = existing_set.union(instrumental_set)
@@ -311,9 +276,9 @@ class Sim(object):
                       
              mc=markovChain(M)  
              mc.computePi('linear')
-             y=mc.pi.reshape(d)                                               #Get the stationary distribution   
-             y=y/np.sum(y)
-             n_e=((y/np.max(y))).tolist()                                     
+             pi=mc.pi.reshape(d)                                               #Get the stationary distribution   
+             pi=pi/np.sum(pi)
+             n_e=((pi/np.max(pi))).tolist()                                     
             
           # Add populations to demography, setting initial sizes
           for i in range(d):
@@ -333,7 +298,6 @@ class Sim(object):
                     re_origin,
                     re_dt,
                     re_proportion,
-                    re_mode,
                     ):
             
           """
@@ -343,7 +307,6 @@ class Sim(object):
              re_origin (list): The origin points for range expansion, specified as (column, row) indices.
              re_dt (float): The time interval between successive expansion events.
              re_proportion (float): The proportion of the population that moves to a new deme during expansion.
-             re_mode (str): Specifies the mode of expansion, either 'large_scale_sink' or 'two_sided_large_scale_directional'.
 
           Notes:
             - This function adjusts population parameters, sets migration rates to zero between demes, and handles
@@ -353,8 +316,7 @@ class Sim(object):
             
           # Calculate the level sets based on the provided origin and mode
           
-          self.compute_level_set(origin=re_origin,
-                                 mode=re_mode,)
+          self.compute_level_set(origin=re_origin)
             
           # Retrieve the maximum level from the graph properties
           lmax=self.digraph.graph['max_level']
@@ -399,7 +361,6 @@ class Sim(object):
                     mm_origin,
                     mm_dt,
                     mm_proportion,
-                    mm_mode,
                     ):
           
           """
@@ -409,15 +370,13 @@ class Sim(object):
              mm_origin (list): The origin points for mass migration, specified as (column, row) indices.
              mm_dt (float): The time interval between successive mass migration events.
              mm_proportion (float): The proportion of the population that migrates out of each deme during each event.
-             mm_mode (str): Specifies the mode of migration, either 'large_scale_sink' or 'two_sided_large_scale_directional'.
 
           Notes:
            - This function configures mass migration events based on level sets calculated from the origin points.
              It schedules migrations proportionally distributed among ancestors at defined intervals.
           """
            
-          self.compute_level_set(mm_origin,
-                                  mm_mode)
+          self.compute_level_set(mm_origin)
            
           lmax=self.digraph.graph['max_level']
           dt=mm_dt                                                            #Time interval of mass expansion
