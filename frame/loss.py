@@ -1,6 +1,6 @@
 import numpy as np
 import scipy.sparse as sp
-from .lyapunov_helper import modified_singular_lyapnov
+from lyapunov_helper import modified_singular_lyapnov
 from discreteMarkovChain import markovChain
 
 """ Construct contrast matrix"""
@@ -88,14 +88,14 @@ def lik_wrapper(z,M,S,h,p,k):
     M=np.identity(d)-L
     mc=markovChain(M)
     mc.computePi('linear')
-    y=mc.pi.reshape(d)                                                         #Get the stationary distribution   
-    if np.min(y)<=0:
+    pi=mc.pi.reshape(d)                                                        #Get the stationary distribution   
+    if np.min(pi)<=0:
        mc.computePi('power') 
-    y=mc.pi.reshape(d)      
-    y=y/np.sum(y)
-    loggamma=np.log(c[0])-c[1]*np.log(y)
+    pi=mc.pi.reshape(d)      
+    pi=pi/np.sum(pi)
+    loggamma=np.log(c[0])-c[1]*np.log(pi)
     gamma=np.exp(loggamma)
-    dgamma=-c[1]*gamma/y
+    dgamma=-c[1]*gamma/pi
     
     (Ttotal,Time,T_bar,Tc_inv,lik)=getcoalesce(L,gamma,S,h)
     lik=lik*p/2
@@ -127,21 +127,21 @@ def lik_wrapper(z,M,S,h,p,k):
            Tgs=Time_grad[:,[s]]
            Tt=Time[:,[t]]
            Ts=Time[:,[s]]
-           grad_lik_m[i]=2*Tgs.T@(Tt-Ts)+y[s]*(beta[t]-beta[s])
+           grad_lik_m[i]=2*Tgs.T@(Tt-Ts)+pi[s]*(beta[t]-beta[s])
 
        for i in range(d):                                                      #Compute the gradient of the negative log likelihood function with respect to c     
            if Time_grad[i,i]!=0:
               x=np.log(np.abs(Time_grad[i,i]))+np.log(Time[i,i])
-              x_c0=x-c[1]*np.log(y[i])
+              x_c0=x-c[1]*np.log(pi[i])
               grad_lik_c[0]+=-np.sign(Time_grad[i,i])*np.exp(x_c0)
-              grad_lik_c[1]+=-np.sign(Time_grad[i,i])*np.exp(x)*(-np.log(y[i])*gamma[i])
+              grad_lik_c[1]+=-np.sign(Time_grad[i,i])*np.exp(x)*(-np.log(pi[i])*gamma[i])
     return (lik,grad_lik_m,grad_lik_c)
 
 def pen_wrapper(z,M,deg,lamb):      
     nnzm=len(z)-2
     x=z[0:nnzm]
     m=np.exp(x)  
-    m_geomean=np.exp(np.mean(x))                                                #The geometric mean of migration rates   
+    m_geomean=np.exp(np.mean(x))                                               #The geometric mean of migration rates   
                                                                                                                 
     M_index=getindex(M)
     
@@ -189,7 +189,7 @@ def loss_wrapper(z,M,S,h,p,lamb,deg,k):
     d=M.shape[0]
     nnzm=len(z)-2
     r=300
-    coeff=(o-1)*p/(2*d*r) 
+    coeff=(o-1)*p/(2*d*r)
     theta=np.exp(z[0:nnzm+1])
     alpha=1/(1+np.exp(-z[nnzm+1]/k))
     coeff_alpha=alpha*(1-alpha)/k
