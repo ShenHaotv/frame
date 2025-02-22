@@ -77,18 +77,15 @@ def run_sim_migration(topology,
        boundary=[5]
     else:
         boundary=None
-    
-    if topology=='small_scale_directional':
-       directional=[((0,4), 8, 'E')] 
-    
-    elif topology=='large_scale_directional' or topology=='anisotropic':
+             
+    if topology=='large_directional_ancestral_flow' or topology=='anisotropic':
          directional=[]
          for j in range(N_rows):
              directional.append(((0, j), 8, 'E'))
              if topology=='anisotropic':
                 directional.append(((8, j), 8, 'W'))
                 
-    elif topology=='two_sided_large_scale_directional':
+    elif topology=='converging_large_directional_flow':
          directional=[]
          for j in range(N_rows):
              directional.append(((0, j), 4, 'E'))
@@ -102,26 +99,29 @@ def run_sim_migration(topology,
          directional.append(((8, 9), 4, 'W'))
     else:
         directional=None
-        
-    if topology=='small_scale_sink':
-       sink=[((4,5),1)]
-    elif topology=='large_scale_sink':
-         sink=[((4,5),3)]
+    
+    if topology.startswith("re_start_"):
+       k = int(topology.split("_")[-1])
+       directional=[]
+       for j in range(N_rows):
+           directional.append(((k, j), 1, 'E'))
+           directional.append(((8-k, j), 1, 'W'))
+                       
+    if topology=='large_zone_of_converging_ancestries':
+       converging_zone=[((4,5),3)]
     elif topology=='small_scale_patterns':
-         sink=[((2,3),1)]
+         converging_zone=[((2,3),1)]
     else:
-        sink=None
+        converging_zone=None
         
-    if topology=='small_scale_source':
-       source=[((4,5),1)]
-    elif topology=='large_scale_source':
-         source=[((4,5),3)]
+    if topology=='large_zone_of_diverging_ancestries':
+       diverging_zone=[((4,5),3)]
     elif topology=='small_scale_patterns':
-         source=[((6,3),1)]
+         diverging_zone=[((6,3),1)]
     else:
-        source=None
+        diverging_zone=None
 
-    if topology=='circle':
+    if topology=='zone_of_cyclic_ancestries':
        circle=[((4,4), (5,4), (5,5),(5,6),(4,6),(3,5))] 
     elif topology=='small_scale_patterns':
          circle=[((2,6),(3,6),(3,7),(3,8),(2,8),(1,7)),((5,6),(6,6),(7,6),(6,7),(6,8),(5,7))] 
@@ -160,8 +160,8 @@ def run_sim_migration(topology,
                              m_topo=m_topo,
                              boundary=boundary,
                              directional=directional,
-                             sink=sink,
-                             source=source,
+                             converging_zone=converging_zone,
+                             diverging_zone=diverging_zone,
                              circle=circle,
                              )
     
@@ -169,8 +169,8 @@ def run_sim_migration(topology,
 
     genotypes = Simulation.simulate_genotypes(sequence_length=1,
                                               mu=1e-3,
-                                              target_n_snps=100000,
-                                              n_print=500)
+                                              target_n_snps=1,
+                                              n_print=1)
 
     coord = Simulation.coord.copy()
     grid = Simulation.grid.copy()
@@ -185,41 +185,36 @@ def run_sim_migration(topology,
         M[i,i]=1-np.sum(M[i,:])
     mc=markovChain(M)  
     mc.computePi('linear')
-    y=mc.pi.reshape(d)                                                             #Get the stationary distribution   
-    y=y/np.sum(y)
+    pi=mc.pi.reshape(d)                                                             #Get the stationary distribution   
+    pi=pi/np.sum(pi)
     
     ground_truth=SpatialDiGraph(genotypes, coord, grid, edges)
     ground_truth.M = csr_matrix(nx.adjacency_matrix(digraph, weight="weight").toarray())
     ground_truth.m = ground_truth.M.data
     if n_e_mode=='proportional':
-       ground_truth.gamma=np.max(y)/y
+       ground_truth.gamma=np.max(pi)/pi
     else:
         ground_truth.gamma=np.ones(d)
-    ground_truth.y=y.copy()                                                     #Get the stationary distribution   
+    ground_truth.pi=pi.copy()                                                     #Get the stationary distribution   
 
     lamb_grid = np.geomspace(1e-3, 1e3, 13)[::-1]
     lamb_warmup=1e3
     
     sp_digraph = SpatialDiGraph(genotypes, coord, grid, edges)
-    sp_digraph=fitting(sp_digraph,
+    """sp_digraph=fitting(sp_digraph,
                        lamb_grid,
-                       lamb_warmup)
+                       lamb_warmup)"""
     return(ground_truth,sp_digraph)
 
-def run_sim_re(sample_mode,
-               re_mode,):
-    
-    if re_mode=='large_scale_sink':
-       N_rows=9
-    elif re_mode=='two_sided_large_scale_directional':
-         N_rows=11
-         
+def run_sim_re(sample_mode):
+
+    N_rows=11         
     N_columns=9
           
     boundary=None
     directional=None
-    sink=None
-    source=None
+    converging_zone=None
+    diverging_zone=None
     circle=None
        
     m_topo=3       
@@ -238,10 +233,6 @@ def run_sim_re(sample_mode,
     else:
         semi_random_sampling=None
         
-    if re_mode=='large_scale_sink':
-       reshape_origin=[(4,4)]
-    else:
-        reshape_origin=None
         
     Simulation = Sim(n_rows=N_rows,
                      n_columns=N_columns,
@@ -249,36 +240,28 @@ def run_sim_re(sample_mode,
                      node_sample_prob=node_sample_prob,
                      semi_random_sampling=semi_random_sampling,)
     
-    Simulation.setup_digraph(reshape_origin=reshape_origin,
-                             m_base=m_base,
+    Simulation.setup_digraph(m_base=m_base,
                              m_low=m_low,
                              m_high=m_high,
                              m_topo=m_topo,
                              boundary=boundary,
                              directional=directional,
-                             sink=sink,
-                             source=source,
+                             converging_zone=converging_zone,
+                             diverging_zone=diverging_zone,
                              circle=circle,
                              )
     
     Simulation.set_up_populations()
     
-    if re_mode=='large_scale_sink':
-       re_origin=[(4,4)]
-       re_dt=1e-3
-       re_proportion=0.1
-    
-    elif re_mode=='two_sided_large_scale_directional':
-         re_origin=[]
-         for i in range(11):
-             re_origin.append((4,i))
-         re_dt=1e-3
-         re_proportion=0.1
+    re_origin=[]
+    for i in range(11):
+        re_origin.append((4,i))
+    re_dt=1e-3
+    re_proportion=0.1
     
     Simulation.set_up_re(re_origin,
                          re_dt,
-                         re_proportion,
-                         re_mode,)
+                         re_proportion)
 
     genotypes = Simulation.simulate_genotypes(sequence_length=1,
                                               mu=1e-3,
@@ -300,20 +283,14 @@ def run_sim_re(sample_mode,
     
     return(sp_digraph)
 
-def run_sim_mm(sample_mode,
-               mm_mode):
+def run_sim_mm(sample_mode):
     
-    if mm_mode=='large_scale_sink':
-       N_rows=9
-       
-    elif mm_mode=='two_sided_large_scale_directional':
-         N_rows=11
-    
+    N_rows=11   
     N_columns=9
     boundary=None
     directional=None
-    sink=None
-    source=None
+    converging_zone=None
+    diverging_zone=None
     circle=None
        
     m_topo=3       
@@ -332,47 +309,34 @@ def run_sim_mm(sample_mode,
     else:
         semi_random_sampling=None
         
-    if mm_mode=='large_scale_sink':
-       reshape_origin=[(4,4)]
-    else:
-        reshape_origin=None
-        
     Simulation = Sim(n_rows=N_rows,
                      n_columns=N_columns,
                      n_samples_per_node=n_samples_per_node,
                      node_sample_prob=node_sample_prob,
                      semi_random_sampling=semi_random_sampling,)
     
-    Simulation.setup_digraph(reshape_origin=reshape_origin,
-                             m_base=m_base,
+    Simulation.setup_digraph(m_base=m_base,
                              m_low=m_low,
                              m_high=m_high,
                              m_topo=m_topo,
                              boundary=boundary,
                              directional=directional,
-                             sink=sink,
-                             source=source,
+                             converging_zone=converging_zone,
+                             diverging_zone=diverging_zone,
                              circle=circle,
                              )
     
     Simulation.set_up_populations()
-    
-    if mm_mode=='large_scale_sink':
-       mm_origin=[(4,4)]
-       mm_dt=1e-1
-       mm_proportion=0.2
-    
-    elif mm_mode=='two_sided_large_scale_directional':
-         mm_origin=[]
-         for i in range(11):
-             mm_origin.append((4,i))
-         mm_dt=1e-1
-         mm_proportion=0.5
+      
+    mm_origin=[]
+    for i in range(11):
+        mm_origin.append((4,i))
+    mm_dt=1e-1
+    mm_proportion=0.5
          
     Simulation.set_up_mm(mm_origin,
                          mm_dt,
                          mm_proportion,
-                         mm_mode,
                          )
 
     genotypes = Simulation.simulate_genotypes(sequence_length=1,
