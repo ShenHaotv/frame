@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.stats as stats
 from scipy.sparse import csr_matrix
-from .loss import getindex
+from loss import getindex
 
 def benjamini_hochberg(p_values, fdr=0.2):
     """
@@ -48,7 +48,7 @@ class Digraphstats(object):
           z_score=(logratio-mean_logratio)/np.sqrt(var_logratio) 
           self.z_score=z_score
      
-      def distance_regression(self,ax,ms=3,labelsize=6, R2_fontsize=10,legend_fontsize=10):         
+      def distance_regression(self,ax,ms=3,labelsize=6, R2_fontsize=10,legend_fontsize=10,xticks=None,yticks=None):         
           coefficients = np.polyfit(self.D_fit_data,self.D_data,1)
           m, b = coefficients
           D_linear=m*self.D_fit_data + b
@@ -60,6 +60,12 @@ class Digraphstats(object):
           ax.text(0.6, 0.3, "R²={:.3f}".format(corrcoef**2),fontsize=R2_fontsize,transform=ax.transAxes)
           ax.set_xlabel('Fitted genetic distance',fontsize=legend_fontsize)
           ax.set_ylabel('Empirical genetic distance',fontsize=legend_fontsize)
+          if xticks is not None:
+             ax.set_xticks(xticks)
+             ax.set_xticklabels([f'{tick:.2f}' for tick in xticks])
+          if yticks is not None:
+             ax.set_yticks(yticks)
+             ax.set_yticklabels([f'{tick:.2f}' for tick in yticks]) 
       
       def z_score_distribution(self,ax):
           ax.hist(self.z_score, bins='auto', color='blue', alpha=0.7)
@@ -123,3 +129,4 @@ class Digraphstats(object):
               v.ax.text(v.grid[int(pair[1])][0],v.grid[int(pair[1])][1], str(int(pair_observed[1])),
                         horizontalalignment="center", verticalalignment="bottom",
                         size=v.obs_node_textsize*0.8, zorder=v.obs_node_zorder,)
+   
