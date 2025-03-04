@@ -177,11 +177,11 @@ class Vis(object):
         self.cbar_loc = cbar_loc
         self.cbar_bbox_to_anchor = cbar_bbox_to_anchor
         
-        #color campass
-        self.campass_font_size = campass_font_size
-        self.campass_radius = campass_radius 
-        self.campass_bbox_to_anchor =campass_bbox_to_anchor
-        self.campass_pad=campass_pad
+        #color compass
+        self.compass_font_size = compass_font_size
+        self.compass_radius = compass_radius 
+        self.compass_bbox_to_anchor =compass_bbox_to_anchor
+        self.compass_pad=compass_pad
         
         # target correlations
         self.target_dist_pt_si_radius=target_dist_pt_size
@@ -562,14 +562,14 @@ class Vis(object):
                  
         self.edge_cbar.ax.tick_params(labelsize=self.cbar_ticklabelsize)
     
-    """Draw colorcampass"""
-    def draw_edge_colorcampass(self, mode):
+    """Draw colorcompass"""
+    def draw_edge_colorcompass(self, mode):
         bbox = self.ax.get_position()
-        inset_width = bbox.width * self.campass_radius  
-        inset_height = bbox.height * self.campass_radius  
+        inset_width = bbox.width * self.compass_radius  
+        inset_height = bbox.height * self.compass_radius  
         
-        inset_left = bbox.x0+self.campass_bbox_to_anchor[0]*bbox.width 
-        inset_bottom = bbox.y0+self.campass_bbox_to_anchor[1]*bbox.height
+        inset_left = bbox.x0+self.compass_bbox_to_anchor[0]*bbox.width 
+        inset_bottom = bbox.y0+self.compass_bbox_to_anchor[1]*bbox.height
         
         radius=1
         theta = np.linspace(0, 2 * np.pi, 256)
@@ -589,46 +589,46 @@ class Vis(object):
         colors = np.stack((red, green, blue), axis=2)
         
         # Create polar axes at the calculated position
-        self.campass_axins=self.ax.figure.add_axes([inset_left, inset_bottom, 
+        self.compass_axins=self.ax.figure.add_axes([inset_left, inset_bottom, 
                                                     inset_width, inset_height], 
                                                     projection='polar')
          
         
-        self.campass_axins.plot(np.linspace(0, 2 * np.pi, 100), 
+        self.compass_axins.plot(np.linspace(0, 2 * np.pi, 100), 
                         np.full(100, 1/3), color='black', lw=0.5, linestyle=':')
-        self.campass_axins.plot(np.linspace(0, 2 * np.pi, 100), 
+        self.compass_axins.plot(np.linspace(0, 2 * np.pi, 100), 
                         np.full(100, 2/3), color='black', lw=0.5, linestyle='--')
-        #self.campass_axins.spines['polar'].set_edgecolor('white')
-        self.campass_axins.grid(False)
+        #self.compass_axins.spines['polar'].set_edgecolor('white')
+        self.compass_axins.grid(False)
         
-        self.campass_axins.pcolormesh(theta, r, np.rad2deg(theta), 
+        self.compass_axins.pcolormesh(theta, r, np.rad2deg(theta), 
                                    color=colors.reshape(-1, 3), shading='auto')
         
-        self.campass_axins.set_yticklabels([])
+        self.compass_axins.set_yticklabels([])
 
         # Customizing ticks
-        self.campass_axins.set_xticks(np.pi/180. * np.linspace(0,  360, 4, endpoint=False))
+        self.compass_axins.set_xticks(np.pi/180. * np.linspace(0,  360, 4, endpoint=False))
         
         if mode=='Difference':
            v1=self.vmax_diff/3
            v2=2*self.vmax_diff/3
            v3=self.vmax_diff
-           self.campass_axins.set_xticklabels([ f'      ····· {v1:.2f}\n      ─ ─ {v2:.2f}\n      ───{v3:.2f}', 
+           self.compass_axins.set_xticklabels([ f'      ····· {v1:.2f}\n      ─ ─ {v2:.2f}\n      ───{v3:.2f}', 
                                                 r"$\mathrm{△log}_{10}(\mathrm{m})$",  
-                                                '', ''], fontsize=self.campass_font_size)
+                                                '', ''], fontsize=self.compass_font_size)
            
         elif mode=='Summary':
              v1=self.vmax_summary/3
              v2=2*self.vmax_summary/3
              v3=self.vmax_summary
-             self.campass_axins.set_xticklabels([f'      ····· {v1:.2f}\n      ─ ─ {v2:.2f}\n      ───{v3:.2f}', 
+             self.compass_axins.set_xticklabels([f'      ····· {v1:.2f}\n      ─ ─ {v2:.2f}\n      ───{v3:.2f}', 
                                                r"$\mathrm{log}_{10}(1+\frac{\mathrm{m_{s}}}{\mathrm{m_{min}}})$",
-                                                '', ''],fontsize=self.campass_font_size)
+                                                '', ''],fontsize=self.compass_font_size)
             
-        self.campass_axins.tick_params(axis='x', pad=0)      
-        for i, label in enumerate(self.campass_axins.get_xticklabels()):
+        self.compass_axins.tick_params(axis='x', pad=0)      
+        for i, label in enumerate(self.compass_axins.get_xticklabels()):
             if i == 1: 
-               label.set_y(self.campass_pad)        
+               label.set_y(self.compass_pad)        
     # ------------------------- Plotting Functions -------------------------             
     """Draw different representations of migration rates"""
     def draw_migration_rates(self,
@@ -638,7 +638,7 @@ class Vis(object):
                              draw_nodes=True,
                              set_title=True,
                              draw_colorbar=True,
-                             draw_colorcampass=True,
+                             draw_colorcompass=True,
                              title_font_size=10,
                              ):
         self.ax = ax
@@ -647,8 +647,8 @@ class Vis(object):
         self.draw_edges(mode=mode)
 
         if mode=='Difference' or mode=='Summary':
-           if draw_colorcampass is True:
-              self.draw_edge_colorcampass(mode=mode)
+           if draw_colorcompass is True:
+              self.draw_edge_colorcompass(mode=mode)
         elif draw_colorbar is True:           
              self.draw_edge_colorbar(mode=mode)
         if draw_nodes is True:
@@ -760,4 +760,3 @@ class Vis(object):
         self.draw_attributes_wrapper([axs[1, 0], axs[1, 1], axs[1, 2],axs[1,3]],
                                      node_scale=node_scale,
                                      draw_map=draw_map)
-       
