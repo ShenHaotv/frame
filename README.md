@@ -17,7 +17,7 @@ conda activate frame-e
 ```
 Note: For Mac M1 users they'll need to add `--platform=osx-arm64` to the conda create command to make sure that all the packages are found correctly in the channel-forge channel of conda. 
 
-The dependencies are listed in dependencies.txt - though we recommend installing packages using `conda` in the following sequence to avoid conflicts in packages:
+The dependencies are listed in dependencies.txt. We recommend installing packages using `conda` in the following sequence to avoid conflicts in packages:
 
 ```
 conda install numpy==1.26.4 scipy==1.11.4 scikit-learn==1.5.1
