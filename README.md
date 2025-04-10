@@ -20,7 +20,7 @@ Note: For Mac M1 users they'll need to add `--platform=osx-arm64` to the conda c
 The dependencies are listed in dependencies.txt - though we recommend installing packages using `conda` and pip in the following sequence to avoid conflicts in packages:
 
 ```
-conda install -c defaults numpy==1.26.4
+conda install numpy==1.26.4
 conda install scipy==1.11.4 scikit-learn==1.5.1
 conda install setuptools==71.0.4 pytest==8.3.2
 pip install discreteMarkovChain
