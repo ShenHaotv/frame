@@ -8,7 +8,7 @@ spatial population genetic data.
 
 The `frame` method and software was developed by Hao Shen and advised by John Novembre. The structure of project was adapted from feems https://github.com/NovembreLab/feems.git. We also used code from Benjamin M. Peter to help construct the spatial graphs. 
  
-We recommend that users install [Anaconda][anaconda] as it prioritizes the MKL-optimized versions of numerical libraries such as ```numpy```, ```scipy```, and others. This is crucial for ensuring the numerical performance of our method. 
+We recommend that users install [Anaconda][anaconda] or [Miniconda][miniconda] to prioritize the MKL-optimized versions of numerical libraries such as ```numpy```, ```scipy```, and others. This is crucial for ensuring the numerical performance of our method. 
 To get started, set up a new conda environment, make sure that ```defaults``` is the only channel:
 
 ```
@@ -39,3 +39,4 @@ pip install git+https://github.com/shenhaotv/frame
 To help get your analysis started, we provide an example workflow in the [Example.ipynb](https://github.com/ShenHaotv/frame/blob/main/docsrc/Example.ipynb) notebook. The notebook analyzes empirical data from North American gray wolves populations published in [Schweizer et al. 2015](https://onlinelibrary.wiley.com/doi/full/10.1111/mec.13364?casa_token=idW0quVPOU0AAAAA:o_ll85b8rDbnW3GtgVeeBUB4oDepm9hQW3Y445HI84LC5itXsiH9dGO-QYGPMsuz0b_7eNkRp8Mf6tlW). 
 
 [anaconda]: https://www.anaconda.com/products/distribution
+[miniconda]: https://docs.conda.io
