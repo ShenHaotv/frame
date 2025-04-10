@@ -8,7 +8,7 @@ spatial population genetic data.
 
 The `frame` method and software was developed by Hao Shen and advised by John Novembre. The structure of project was adapted from feems https://github.com/NovembreLab/feems.git. We also used code from Benjamin M. Peter to help construct the spatial graphs. 
  
-We strongly recommend users install [Anaconda][anaconda] because it pritorize the MKL-optimized versions of numerical libraries(such as numpy,scipy,etc). First setup a `conda` environment, make sure that defaults is the only channel:
+We strongly recommend users install [Anaconda][anaconda] because it pritorize the MKL-optimized versions of numerical libraries(such as numpy,scipy,etc), which is crucial for the numerical performance of our method. First setup a `conda` environment, make sure that defaults is the only channel:
 
 ```
 conda create -n=frame-e python=3.11.9
