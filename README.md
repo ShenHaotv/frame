@@ -8,25 +8,24 @@ spatial population genetic data.
 
 The `frame` method and software was developed by Hao Shen and advised by John Novembre. The structure of project was adapted from feems https://github.com/NovembreLab/feems.git. We also used code from Benjamin M. Peter to help construct the spatial graphs. 
  
-We recommend users install [Anaconda][anaconda] since it pritorize the MKL-optimized versions of numerical libraries. setup a `conda` environment:
+We strongly recommend users install [Anaconda][anaconda] because it pritorize the MKL-optimized versions of numerical libraries(such as numpy,scipy,etc). First setup a `conda` environment:
 
 ```
 conda create -n=frame-e python=3.11.9
 conda activate frame-e
-
 ```
 Note: For Mac M1 users they'll need to add `--platform=osx-arm64` to the conda create command to make sure that all the packages are found correctly in the channel-forge channel of conda. 
 
 The dependencies are listed in dependencies.txt - though we recommend installing packages using `conda` and pip in the following sequence to avoid conflicts in packages:
 
 ```
-conda install -c defaults numpy==1.26.4 scipy==1.11.4 scikit-learn==1.5.1
-conda install -c defaults setuptools==71.0.4 pytest==8.3.2
+conda install numpy==1.26.4 scipy==1.11.4 scikit-learn==1.5.1
+conda install defaults setuptools==71.0.4 pytest==8.3.2
 pip install discreteMarkovChain
 conda install -c conda-forge pandas-plink=2.2.9
-conda install -c defaults matplotlib==3.9.1 click==8.1.7 fiona==1.9.6
-conda install -c defaults shapely==2.0.5 pyproj==3.6.1 cartopy=0.23.0
-conda install -c defaults networkx=3.3 msprime==1.3.2
+conda install matplotlib==3.9.1 click==8.1.7 fiona==1.9.6
+conda install shapely==2.0.5 pyproj==3.6.1 cartopy=0.23.0
+conda install networkx=3.3 msprime==1.3.2
 
 ```
 Once the conda environment has been setup with these dependencies we can install `frame`:
