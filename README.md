@@ -24,9 +24,9 @@ conda install numpy==1.26.4 scipy==1.11.4 scikit-learn==1.5.1
 conda install setuptools pytest
 pip install discreteMarkovChain
 pip install pandas-plink
-conda install matplotlib==3.9.1 click==8.1.7 fiona==1.9.6
-conda install shapely==2.0.5 pyproj==3.6.1 cartopy=0.23.0
-conda install networkx=3.3 msprime==1.3.2
+conda install matplotlib click fiona
+conda install shapely==2.0.5 pyproj==3.6.1
+conda install cartopy networkx
 
 ```
 Once the conda environment has been setup with these dependencies we can install `frame`:
