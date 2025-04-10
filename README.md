@@ -15,7 +15,7 @@ To get started, set up a new conda environment, make sure that ```defaults``` is
 conda create -n=frame-e python=3.11.9
 conda activate frame-e
 ```
-Note: For Mac M1 users they'll need to add `--platform=osx-arm64` to the conda create command to make sure that all the packages are installed properly. 
+Note: For Mac M1 users they'll need to add `--platform=osx-arm64` to the conda create command. 
 
 The dependencies are listed in dependencies.txt. We recommend installing packages using `conda` in the following sequence to avoid conflicts in packages:
 
