@@ -15,7 +15,7 @@ conda create -n=frame-e python=3.11.9
 conda activate frame-e
 conda config --add channels conda-forge
 ```
-Note: For Mac M1 users they'll need to add `--platform=osx-64` to the conda create command to make sure that all the packages are found correctly in the channel-forge channel of conda. 
+Note: For Mac M1 users they'll need to add `--platform=osx-arm64` to the conda create command to make sure that all the packages are found correctly in the channel-forge channel of conda. 
 
 The dependencies are listed in dependencies.txt - though we recommend installing packages using `conda` and pip in the following sequence to avoid conflicts in packages:
 
