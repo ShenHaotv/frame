@@ -156,10 +156,10 @@ def run_sim_migration(topology,
     
     Simulation.set_up_populations(n_e_mode=n_e_mode)
 
-    genotypes = Simulation.simulate_genotypes(sequence_length=100000,
+    genotypes = Simulation.simulate_genotypes(sequence_length=1,
                                               mu=1e-3,
-                                              target_n_snps=2,
-                                              n_print=1)
+                                              target_n_snps=100000,
+                                              n_print=500)
 
     coord = Simulation.coord.copy()
     grid = Simulation.grid.copy()
