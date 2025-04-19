@@ -42,8 +42,8 @@ class Sim(object):
                         m_topo=3,
                         boundary=None,
                         directional=None,
-                        converging_zone=None,
-                        diverging_zone=None,
+                        converging=None,
+                        diverging=None,
                         circle=None,
                         ):  
 
@@ -56,10 +56,10 @@ class Sim(object):
              m_high (float): Multiplier for higher migration rate areas. 
              m_topo (float): Mulyiplier for topological patterns
              boundary (list): Specifies regions with different migration rates.
-             directional (list): Specifies directional ancestral flows.
-             converging_zone (list): Specifies areas acting as zone of converging ancestries
-             diverging_zone (list): Specifies areas acting as zone of diverging ancestries.
-             circle (list): Specifies nodes forming zone of cyclic ancestries.
+             directional (list): Specifies directionally migrating lineages.
+             converging (list): Specifies areas acting as zone of spatially converging lineages.
+             diverging (list): Specifies areas acting as zone of spatially converging lineages.
+             circle (list): Specifies nodes forming zone of cyclic rotating lineages.
 
           Notes:
            - The function initializes a triangular lattice graph and converts it to a directed graph.
@@ -97,8 +97,8 @@ class Sim(object):
                           digraph[(i+1,x[1])][(i,x[1])]['weight']*=m_topo      
                           
           # Set up migration sinks                     
-          if converging_zone!=None:
-             for (si,r) in converging_zone:                                    #center and radius         
+          if converging!=None:
+             for (si,r) in converging:                                    #center and radius         
                  a={si}
                  b={si}
                  for i in range(r):
@@ -112,8 +112,8 @@ class Sim(object):
                      a=c
             
           # Set up migration sources
-          if diverging_zone!=None:
-             for (so,r) in diverging_zone:
+          if diverging!=None:
+             for (so,r) in diverging:
                  a={so} 
                  b={so}
                  for i in range(r):
