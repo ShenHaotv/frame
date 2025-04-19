@@ -54,7 +54,7 @@ class Sim(object):
              m_base (float): Base migration rate.
              m_low (float): Multiplier for lower migration rate areas.
              m_high (float): Multiplier for higher migration rate areas. 
-             m_topo (float): Mulyiplier for topological patterns
+             m_topo (float): Mulyiplier for topological patterns.
              boundary (list): Specifies regions with different migration rates.
              directional (list): Specifies directionally migrating lineages.
              converging (list): Specifies areas acting as zone of spatially converging lineages.
