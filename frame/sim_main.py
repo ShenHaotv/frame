@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 import networkx as nx
-from .sim import Sim
-from .spatial_digraph import SpatialDiGraph
-from .cross_validation import run_cv
+from sim import Sim
+from spatial_digraph import SpatialDiGraph
+from cross_validation import run_cv
 from discreteMarkovChain import markovChain
 
 def fitting(sp_digraph,
@@ -73,19 +73,17 @@ def run_sim_migration(topology,
     N_rows=11
     N_columns=9
     
-    if topology=='boundary' or topology=='small_scale_patterns':
+    if topology=='small_scale_patterns':
        boundary=[5]
     else:
         boundary=None
              
-    if topology=='large_directional_ancestral_flow' or topology=='anisotropic':
+    if topology=='large_scale_directionally_migrating_lineages':
          directional=[]
          for j in range(N_rows):
              directional.append(((0, j), 8, 'E'))
-             if topology=='anisotropic':
-                directional.append(((8, j), 8, 'W'))
-                
-    elif topology=='converging_large_directional_flow':
+                         
+    elif topology=='large_scale_converging_directionally_migrating_lineages':
          directional=[]
          for j in range(N_rows):
              directional.append(((0, j), 4, 'E'))
@@ -99,32 +97,23 @@ def run_sim_migration(topology,
          directional.append(((8, 9), 4, 'W'))
     else:
         directional=None
-    
-    if topology.startswith("re_start_"):
-       k = int(topology.split("_")[-1])
-       directional=[]
-       for j in range(N_rows):
-           directional.append(((k, j), 1, 'E'))
-           directional.append(((8-k, j), 1, 'W'))
                        
-    if topology=='large_zone_of_converging_ancestries':
+    if topology=='large_scale_spatilly_converging_lineages':
        converging_zone=[((4,5),3)]
     elif topology=='small_scale_patterns':
          converging_zone=[((2,3),1)]
     else:
         converging_zone=None
         
-    if topology=='large_zone_of_diverging_ancestries':
-       diverging_zone=[((4,5),3)]
+    if topology=='large_scale_spatially_diverging_lineages':
+       diverging=[((4,5),3)]
     elif topology=='small_scale_patterns':
-         diverging_zone=[((6,3),1)]
+         diverging=[((6,3),1)]
     else:
-        diverging_zone=None
+        diverging=None
 
-    if topology=='zone_of_cyclic_ancestries':
-       circle=[((4,4), (5,4), (5,5),(5,6),(4,6),(3,5))] 
-    elif topology=='small_scale_patterns':
-         circle=[((2,6),(3,6),(3,7),(3,8),(2,8),(1,7)),((5,6),(6,6),(7,6),(6,7),(6,8),(5,7))] 
+    if topology=='small_scale_patterns':
+       circle=[((2,6),(3,6),(3,7),(3,8),(2,8),(1,7)),((5,6),(6,6),(7,6),(6,7),(6,8),(5,7))] 
     else:
         circle=None
        
@@ -161,16 +150,16 @@ def run_sim_migration(topology,
                              boundary=boundary,
                              directional=directional,
                              converging_zone=converging_zone,
-                             diverging_zone=diverging_zone,
+                             diverging=diverging,
                              circle=circle,
                              )
     
     Simulation.set_up_populations(n_e_mode=n_e_mode)
 
-    genotypes = Simulation.simulate_genotypes(sequence_length=1,
+    genotypes = Simulation.simulate_genotypes(sequence_length=100000,
                                               mu=1e-3,
-                                              target_n_snps=100000,
-                                              n_print=500)
+                                              target_n_snps=2,
+                                              n_print=1)
 
     coord = Simulation.coord.copy()
     grid = Simulation.grid.copy()
@@ -214,7 +203,7 @@ def run_sim_re(sample_mode):
     boundary=None
     directional=None
     converging_zone=None
-    diverging_zone=None
+    diverging=None
     circle=None
        
     m_topo=3       
@@ -247,7 +236,7 @@ def run_sim_re(sample_mode):
                              boundary=boundary,
                              directional=directional,
                              converging_zone=converging_zone,
-                             diverging_zone=diverging_zone,
+                             diverging=diverging,
                              circle=circle,
                              )
     
@@ -290,7 +279,7 @@ def run_sim_mm(sample_mode):
     boundary=None
     directional=None
     converging_zone=None
-    diverging_zone=None
+    diverging=None
     circle=None
        
     m_topo=3       
@@ -322,7 +311,7 @@ def run_sim_mm(sample_mode):
                              boundary=boundary,
                              directional=directional,
                              converging_zone=converging_zone,
-                             diverging_zone=diverging_zone,
+                             diverging=diverging,
                              circle=circle,
                              )
     
