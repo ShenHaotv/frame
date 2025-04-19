@@ -98,7 +98,7 @@ class Sim(object):
                           
           # Set up migration sinks                     
           if converging!=None:
-             for (si,r) in converging:                                    #center and radius         
+             for (si,r) in converging:                                         #center and radius of the pattern of spatially converging lineages        
                  a={si}
                  b={si}
                  for i in range(r):
@@ -113,7 +113,7 @@ class Sim(object):
             
           # Set up migration sources
           if diverging!=None:
-             for (so,r) in diverging:
+             for (so,r) in diverging:                                          #center and radius of the pattern of spatially diverging lineages      
                  a={so} 
                  b={so}
                  for i in range(r):
