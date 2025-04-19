@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.sparse import csr_matrix
 import networkx as nx
-from .sim import Sim
-from .spatial_digraph import SpatialDiGraph
-from .cross_validation import run_cv
+from sim import Sim
+from spatial_digraph import SpatialDiGraph
+from cross_validation import run_cv
 from discreteMarkovChain import markovChain
 
 def fitting(sp_digraph,
@@ -99,11 +99,11 @@ def run_sim_migration(topology,
         directional=None
                        
     if topology=='large_scale_spatilly_converging_lineages':
-       converging_zone=[((4,5),3)]
+       converging=[((4,5),3)]
     elif topology=='small_scale_patterns':
-         converging_zone=[((2,3),1)]
+         converging=[((2,3),1)]
     else:
-        converging_zone=None
+        converging=None
         
     if topology=='large_scale_spatially_diverging_lineages':
        diverging=[((4,5),3)]
@@ -149,7 +149,7 @@ def run_sim_migration(topology,
                              m_topo=m_topo,
                              boundary=boundary,
                              directional=directional,
-                             converging_zone=converging_zone,
+                             converging=converging,
                              diverging=diverging,
                              circle=circle,
                              )
@@ -202,7 +202,7 @@ def run_sim_re(sample_mode):
           
     boundary=None
     directional=None
-    converging_zone=None
+    converging=None
     diverging=None
     circle=None
        
@@ -235,7 +235,7 @@ def run_sim_re(sample_mode):
                              m_topo=m_topo,
                              boundary=boundary,
                              directional=directional,
-                             converging_zone=converging_zone,
+                             converging=converging,
                              diverging=diverging,
                              circle=circle,
                              )
@@ -278,7 +278,7 @@ def run_sim_mm(sample_mode):
     N_columns=9
     boundary=None
     directional=None
-    converging_zone=None
+    converging=None
     diverging=None
     circle=None
        
@@ -310,7 +310,7 @@ def run_sim_mm(sample_mode):
                              m_topo=m_topo,
                              boundary=boundary,
                              directional=directional,
-                             converging_zone=converging_zone,
+                             converging=converging,
                              diverging=diverging,
                              circle=circle,
                              )
