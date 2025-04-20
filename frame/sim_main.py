@@ -98,7 +98,7 @@ def run_sim_migration(topology,
     else:
         directional=None
                        
-    if topology=='large_scale_spatilly_converging_lineages':
+    if topology=='large_scale_spatially_converging_lineages':
        converging=[((4,5),3)]
     elif topology=='small_scale_patterns':
          converging=[((2,3),1)]
