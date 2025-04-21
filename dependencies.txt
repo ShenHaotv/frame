@@ -14,8 +14,8 @@ dependencies:
   - matplotlib
   - click
   - fiona
-  - shapely=2.05
-  - pyproj=3.6.1
+  - shapely
+  - pyproj
   - cartopy
   - networkx
   - msprime
