@@ -21,7 +21,7 @@ The dependencies are listed in dependencies.txt. We recommend installing package
 
 ```
 conda install numpy==1.26.4 scipy==1.11.4 scikit-learn==1.5.1
-conda install setuptools pytest pyproj
+conda install pytest pyproj
 conda install matplotlib click fiona
 conda install cartopy networkx
 ```
