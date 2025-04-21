@@ -21,9 +21,9 @@ The dependencies are listed in dependencies.txt. We recommend installing package
 
 ```
 conda install numpy==1.26.4 scipy==1.11.4 scikit-learn==1.5.1
-conda install pytest=8.3.4 pyproj=3.6.1
-conda install matplotlib=3.10.0 click=8.1.8 fiona=1.10.1
-conda install cartopy=0.24.1 networkx=3.4.2
+conda install pytest==8.3.4 pyproj==3.6.1
+conda install matplotlib==3.10.0 click==8.1.8 fiona==1.10.1
+conda install cartopy==0.24.1 networkx==3.4.2
 ```
 Once the conda environment has been setup with these dependencies we can install `frame`:
 
