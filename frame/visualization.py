@@ -121,7 +121,10 @@ class Vis(object):
         seed=1996,
         arc_rad =-0.2,
         mutation_scale=10,
-        abs_max=None,
+        abs_max_full=None,
+        abs_max_diff=None,
+        abs_max_base=None,
+        abs_max_summary=None,
         scale=None,
     ):
         """A visualization module 
@@ -188,7 +191,10 @@ class Vis(object):
         self.target_dist_pt_linewidth = target_dist_pt_linewidth
         self.target_dist_pt_alpha = target_dist_pt_alpha
         self.target_dist_pt_zorder = target_dist_pt_zorder
-        self.abs_max=abs_max
+        self.abs_max_full=abs_max_full
+        self.abs_max_diff=abs_max_diff
+        self.abs_max_base=abs_max_base
+        self.abs_max_summary=abs_max_summary
         
         # colors
         self.colors = ["#994000",
@@ -258,18 +264,25 @@ class Vis(object):
         self.idx_diff=M_diff.nonzero()
         self.norm_log_weights_base=M_base.data-np.mean(np.log10(self.weights))
         self.norm_log_weights_diff=M_diff.data
-
         
-        if self.abs_max is None:
-           absmax=np.max(np.abs(self.norm_log_weights))
-           self.range=round_to_2_sig_fig_ceil(absmax)           
+        if self.abs_max_full is None:
+           self.range_full=round_to_2_sig_fig_ceil(np.max(np.abs(self.norm_log_weights)))
         else:
-            self.range=self.abs_max
-                   
-        self.vmin=-self.range
-        self.vmax=self.range
-        
-        self.edge_norm=clr.Normalize(vmin=self.vmin,vmax=self.vmax) 
+            self.range_full=self.abs_max_full
+       
+        self.vmin_full=-self.range_full
+        self.vmax_full=self.range_full
+    
+        if self.abs_max_base is None:
+           self.range_base=round_to_2_sig_fig_ceil(np.max(np.abs(self.norm_log_weights_base)))
+        else:
+           self.range_vase=self.abs_max_base
+      
+        self.vmin_base=-self.range_base
+        self.vmax_base=self.range_base
+            
+        self.edge_norm_full=clr.Normalize(vmin=self.vmin_full,vmax=self.vmax_full,clip=True) 
+        self.edge_norm_base=clr.Normalize(vmin=self.vmin_base,vmax=self.vmax_base,clip=True) 
         
         d=M.shape[0]
         self.edge_angle_radians_matrix=np.zeros((d,d))
@@ -284,11 +297,13 @@ class Vis(object):
         self.edge_angle_radians_matrix=csr_matrix(self.edge_angle_radians_matrix)
         self.edge_angle_radians=self.edge_angle_radians_matrix.data-0.1
         
-        if len(self.norm_log_weights_diff)>0:
-           self.vmin_diff=0      
-           self.vmax_diff=np.max(self.norm_log_weights_diff)
-           self.vmax_diff=round_to_2_sig_fig_ceil(self.vmax_diff) 
-           self.edge_norm_alpha_diff=clr.Normalize(vmin=self.vmin_diff, vmax=self.vmax_diff)
+        if len(self.norm_log_weights_diff)>0:    
+           if self.abs_max_diff is None:          
+              self.vmax_diff=round_to_2_sig_fig_ceil(np.max(self.norm_log_weights_diff))
+              self.vmax_diff=self.vmax_diff
+           else:
+               self.vmax_diff=self.abs_max_diff
+           self.edge_norm_alpha_diff=clr.Normalize(vmin=0, vmax=self.vmax_diff,clip=True)
            self.alpha_diff=self.edge_norm_alpha_diff(self.norm_log_weights_diff)
            self.color_diff=self.angle_cmap(self.angle_norm(self.edge_angle_radians))
            for i in range(3):
@@ -343,9 +358,12 @@ class Vis(object):
         self.angle_summary = np.where(self.angle_summary < 0, self.angle_summary + 2 * np.pi, self.angle_summary)
         
         self.weights_summary=norm_vector
-        self.transformed_weights_summary=np.log10(1+norm_vector/np.min(self.weights))
-        self.vmax_summary=round_to_2_sig_fig_ceil(np.max(self.transformed_weights_summary))
-        self.edge_norm_alpha_summary=clr.Normalize(vmin=0, vmax=self.vmax_summary)
+        if self.abs_max_summary is None:
+           self.transformed_weights_summary=np.log10(1+norm_vector/np.min(self.weights))
+           self.vmax_summary=round_to_2_sig_fig_ceil(np.max(self.transformed_weights_summary))
+        else:
+            self.vmax_summary=self.abs_max_summary
+        self.edge_norm_alpha_summary=clr.Normalize(vmin=0, vmax=self.vmax_summary,clip=True)
         self.alpha_summary=self.edge_norm_alpha_summary(self.transformed_weights_summary)
     
     """Draws the underlying map projection"""        
@@ -425,8 +443,8 @@ class Vis(object):
                    width=self.edge_width,
                    edgelist=list(np.column_stack(self.idx_full)),
                    edge_color=self.norm_log_weights,
-                   edge_vmin=self.vmin,
-                   edge_vmax=self.vmax,
+                   edge_vmin=self.vmin_full,
+                   edge_vmax=self.vmax_full,
                    connectionstyle=f'arc3, rad = {self.arc_rad}',
                    arrowstyle='-',
                    arrows=True, 
@@ -435,7 +453,7 @@ class Vis(object):
            for edge, weight in zip(np.column_stack(self.idx_full), self.norm_log_weights):               
                start_node, end_node = edge
                start_pos, end_pos = self.grid[start_node], self.grid[end_node]
-               color=self.edge_cmap(self.edge_norm(weight))
+               color=self.edge_cmap(self.edge_norm_full(weight))
                add_arrowhead_on_arc(self.ax,start_pos, end_pos, self.arc_rad,color,self.mutation_scale)
           
         elif mode=='Base':
@@ -448,8 +466,8 @@ class Vis(object):
                      width=3*self.edge_width,
                      edgelist=list(np.column_stack(self.idx_base)),
                      edge_color=self.norm_log_weights_base,
-                     edge_vmin=self.vmin,
-                     edge_vmax=self.vmax,
+                     edge_vmin=self.vmin_base,
+                     edge_vmax=self.vmax_base,
                      arrowstyle='-', 
                      arrowsize=2,)      
                      
@@ -545,18 +563,20 @@ class Vis(object):
         self.edge_cbar.locator = self.edge_tick_locator
         cbar_min, cbar_max = self.edge_sm.get_clim()
        
-        self.edge_cbar.set_ticks([cbar_min,10, cbar_max])
-        self.edge_cbar.set_ticklabels([f'${{{-self.range}}}$',
-                                       r'$0$', 
-                                       f'${{{self.range}}}$'],fontsize=self.cbar_ticklabelsize)
-             
+        self.edge_cbar.set_ticks([cbar_min,10, cbar_max])             
         self.edge_cbar.ax.tick_params(which="minor", length=0)
         
         if mode=='Full':
+           self.edge_cbar.set_ticklabels([f'${{{self.vmin_full}}}$',
+                                           r'$0$', 
+                                           f'${{{self.vmax_full}}}$'],fontsize=self.cbar_ticklabelsize)
            self.edge_cbar.ax.set_title(r"$\mathrm{log}_{10}\left(\frac{\mathrm{m}}{\widetilde{\mathrm{m}}}\right)$", 
                                         loc="center", fontsize=self.cbar_font_size)
 
         elif mode=='Base':
+             self.edge_cbar.set_ticklabels([f'${{{self.vmin_base}}}$',
+                                             r'$0$', 
+                                             f'${{{self.vmax_base}}}$'],fontsize=self.cbar_ticklabelsize)
              self.edge_cbar.ax.set_title(r"$\overline{\mathrm{log}_{10}\left(\frac{\mathrm{m}}{\widetilde{\mathrm{m}}}\right)}$", 
                                          loc="center", fontsize=self.cbar_font_size)
                  
@@ -760,3 +780,4 @@ class Vis(object):
         self.draw_attributes_wrapper([axs[1, 0], axs[1, 1], axs[1, 2],axs[1,3]],
                                      node_scale=node_scale,
                                      draw_map=draw_map)
+       
