@@ -8,7 +8,6 @@ import numpy as np
 from scipy.sparse import tril,csr_matrix
 from matplotlib import ticker
 from matplotlib.patches import FancyArrowPatch
-from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 from pyproj import Proj
 
 """ Round a positive number to 2 significant figures using ceiling"""
@@ -104,8 +103,7 @@ class Vis(object):
         cbar_ticklabelsize=12,
         cbar_width="20%",
         cbar_height="5%",
-        cbar_loc="lower left",
-        cbar_bbox_to_anchor=(0.05, 0.2,1,1),
+        cbar_bbox_to_anchor=(0.05, 0.2),
         compass_font_size=10,
         compass_radius=0.15,
         compass_bbox_to_anchor=(0.05, 0.1),
@@ -177,7 +175,6 @@ class Vis(object):
         self.cbar_ticklabelsize = cbar_ticklabelsize
         self.cbar_width = cbar_width
         self.cbar_height = cbar_height
-        self.cbar_loc = cbar_loc
         self.cbar_bbox_to_anchor = cbar_bbox_to_anchor
         
         #color compass
@@ -548,15 +545,12 @@ class Vis(object):
         self.edge_sm = plt.cm.ScalarMappable(cmap=self.edge_cmap, norm=self.edge_norm_rep)
         
         self.edge_sm._A = []
-        self.edge_axins = inset_axes(
-            self.ax,
-            width=self.cbar_width,
-            height=self.cbar_height,
-            loc=self.cbar_loc,
-            bbox_to_anchor=self.cbar_bbox_to_anchor,
-            bbox_transform=self.ax.transAxes,
-            borderpad=0,)
+        x0=self.cbar_bbox_to_anchor[0]
+        y0=self.cbar_bbox_to_anchor[1]
+        width = float(self.cbar_width.strip('%')) / 100
+        height = float(self.cbar_height.strip('%')) / 100
         
+        self.edge_axins = self.ax.inset_axes([x0, y0, width, height],transform=self.ax.transAxes)
         self.edge_cbar = plt.colorbar(self.edge_sm, cax=self.edge_axins, 
                                       orientation=self.cbar_orientation)
         self.edge_tick_locator = ticker.LogLocator(base=10,numticks=self.cbar_nticks)
@@ -738,8 +732,9 @@ class Vis(object):
                                      draw_map=True,
                                      draw_nodes=True,
                                      set_title=True,):
-        modes=['Full','Base','Difference','Summary']
-        for i in range(4):  
+        modes=['Full','Difference']
+        #modes=['Full','Base','Difference','Summary']
+        for i in range(2):  
             self.draw_migration_rates(ax=axs[i],
                                       mode=modes[i],
                                       draw_map=draw_map,
