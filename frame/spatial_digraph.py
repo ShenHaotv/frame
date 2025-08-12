@@ -133,8 +133,6 @@ class SpatialDiGraph(nx.DiGraph):
             edges (:obj:`numpy.ndarray`): edge array (0-based indexing)
         """
         self.add_nodes_from(np.arange(node_pos.shape[0]))
-        # Subtract 1 from each edge to adjust from 1-based to 0-based indexing
-        adjusted_edges = edges - 1
        
         # Create a list to hold both original and reversed edges (0-based)
         all_edges = []
@@ -298,4 +296,5 @@ class SpatialDiGraph(nx.DiGraph):
                    "train_loss={:.7f}\n"
                ).format(lamb,res[2]["nit"], self.train_loss)
            )
+
 
