@@ -160,7 +160,6 @@ class Sim(object):
     
           grid = np.array(list(pos_dict.values()))
           edges = np.array(graph.edges)
-          edges += 1                                                           # Adjust for 1-based indexing
 
           # create sample coordinates array
           sample_sizes_dict = nx.get_node_attributes(self.digraph, 'sample_size')
