@@ -42,9 +42,9 @@ def create_tile_dict(tiles, bpoly):
             pi, pj = points[i], points[i + 1]
             if pts_in[pi] and pts_in[pj]:
                 if pts[pi] < pts[pj]:
-                    edges.add((pts[pi] + 1, pts[pj] + 1))
+                    edges.add((pts[pi], pts[pj]))
                 else:
-                    edges.add((pts[pj] + 1, pts[pi] + 1))
+                    edges.add((pts[pj], pts[pi]))
 
     pts = [Point(rev_pts[p]) for p in range(len(rev_pts))]
     return pts, rev_pts, edges
