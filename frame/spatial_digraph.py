@@ -296,5 +296,3 @@ class SpatialDiGraph(nx.DiGraph):
                    "train_loss={:.7f}\n"
                ).format(lamb,res[2]["nit"], self.train_loss)
            )
-
-
