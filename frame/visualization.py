@@ -774,4 +774,3 @@ class Vis(object):
         self.draw_attributes_wrapper([axs[1, 0], axs[1, 1], axs[1, 2],axs[1,3]],
                                      node_scale=node_scale,
                                      draw_map=draw_map)
-       
