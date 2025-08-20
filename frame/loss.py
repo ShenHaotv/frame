@@ -206,5 +206,4 @@ def loss_wrapper(z,M,S,h,p,lamb,deg,k):
     grad_loss= np.append(grad_loss_m,grad_loss_c)                              #Merge the gradient
     grad_loss_z=grad_loss*theta                                                #Gradient with respect to z
 
-    #print(loss)
     return (loss,grad_loss_z)
