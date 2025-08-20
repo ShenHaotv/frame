@@ -45,4 +45,3 @@ class Digraphstats(object):
           abs_Z_matrix=(abs_Z_triu+abs_Z_triu.T).toarray()
           ax.imshow(abs_Z_matrix, cmap='viridis',interpolation='nearest')
           ax.set_xlabel('|z-score|',fontsize=15)
-   
