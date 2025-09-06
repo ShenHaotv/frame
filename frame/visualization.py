@@ -612,7 +612,6 @@ class Vis(object):
                         np.full(100, 1/3), color='black', lw=0.5, linestyle=':')
         self.compass_axins.plot(np.linspace(0, 2 * np.pi, 100), 
                         np.full(100, 2/3), color='black', lw=0.5, linestyle='--')
-        #self.compass_axins.spines['polar'].set_edgecolor('white')
         self.compass_axins.grid(False)
         
         self.compass_axins.pcolormesh(theta, r, np.rad2deg(theta), 
