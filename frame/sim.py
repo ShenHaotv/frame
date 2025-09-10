@@ -75,7 +75,7 @@ class Sim(object):
           
           # Set default migration weights and modify them based on boundary conditions
           for (u, v) in digraph.edges():
-              digraph[u][v]['weight'] =0.1
+              digraph[u][v]['weight'] =m_base
               if boundary!=None:
                  a=max(boundary)
                  b=min(boundary)
