@@ -5,6 +5,7 @@ from sklearn.model_selection import KFold
 from .lyapunov_helper import modified_singular_lyapnov
 
 def getcontrast(o,b):
+    """ Construct contrast matrix"""
     contrast=np.zeros((o-1,o))
     for i in range (0,b-1):
         contrast[i,i]=1
@@ -81,17 +82,7 @@ def run_cv(
     return (cv_err,node_train_idxs)
 
 def setup_k_fold_cv(o,n_splits, random_state):
-    """Setup cross-validation indicies.0
-
-    Args:
-        o:number of observed nodes
-        n_splits (:obj:`int`): number of CV folds
-        random_state (:obj:`int`): random seed
-
-    Returns:
-        node_train_idxs: the indexes of indexes of rows of h that are selected for
-        training
-    """     
+    """Get the indices of the training set"""    
     
     kf = KFold(
         n_splits=n_splits, random_state=random_state, shuffle=True
@@ -102,15 +93,8 @@ def setup_k_fold_cv(o,n_splits, random_state):
 
 
 def copy_spatial_digraph(sp_digraph, node_train_idx):
-    """Copy SpatialDiGraph object
-
-    Args:
-        sp_digraph (:obj:`SpatialDiGraph`): SpatialDiGraph class
-        node_idx (:obj:`numpy.ndarray`): indexes of rows of h that are selected
-
-    Returns:
-        sp_digraph_copy (:obj:`SpatialGraph`): SpatialDiGraph class
-    """
+    """Copy SpatialDiGraph object"""
+    
     sp_digraph_copy=deepcopy(sp_digraph)
     h0_copy=sp_digraph.h[0][node_train_idx]
     h1_copy=sp_digraph.h[1][node_train_idx]
@@ -129,7 +113,7 @@ def error(sp_digraph,
           logm_init=None,
           logc_init=None,
           ):
-    """compute the error of the predict snps of the prediction"""
+    """compute the cv error"""
   
     sp_digraph_train=copy_spatial_digraph(sp_digraph, node_train_idx)    
     sp_digraph_train.fit(lamb=lamb,
