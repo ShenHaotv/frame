@@ -231,8 +231,8 @@ class SpatialDiGraph(nx.DiGraph):
             logc_init(:self:`float`):initial value of log c value"""
       
         # check inputs
-        assert lamb >= 0.0, "lambda_w must be non-negative"
-        assert type(lamb) == float, "lambda_w must be float"
+        assert lamb >= 0.0, "lambda must be non-negative"
+        assert type(lamb) == float, "lambda must be float"
         assert type(factr) == float, "factr must be float"
         assert maxls > 0, "maxls must be at least 1"
         assert type(maxls) == int, "maxls must be int"
@@ -293,5 +293,6 @@ class SpatialDiGraph(nx.DiGraph):
                    "train_loss={:.7f}\n"
                ).format(lamb,res[2]["nit"], self.train_loss)
            )
+
 
 
