@@ -104,7 +104,6 @@ def copy_spatial_digraph(sp_digraph, node_train_idx):
 
     return sp_digraph_copy
 
-
 def error(sp_digraph,
           node_train_idx,
           lamb,
