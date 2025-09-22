@@ -222,16 +222,14 @@ class SpatialDiGraph(nx.DiGraph):
             lamb_m (:self:`float`): penalty strength on migration rate difference
             lamb_gamma(:(:self:`float`): penalty strength on coalescence rate difference
             factr (:self:`float`): tolerance for convergence
-            m   #The degree of each node
-               self.deg=np.array(list(self.degree()))[:,1]axls (:self:`int`): maximum number of line search steps
+            maxls (:obj:`int`): maximum number of line search steps
             m (:self:`int`): the maximum number of variable metric corrections
             lb (:self:`int`): lower bound of parameters
             ub (:self:`int`): upper bound of parameters
             maxiter (:self:`int`): maximum number of iterations to run L-BFGS
             verbose (:self:`Bool`): boolean to print summary of results
             logm_init(:self:`float`):initial value of log edge weights
-            loggamma_init(:self:`float`):initial value of log coalescence rates
-            gamma_init(:self:`float`):initial value of coalescence rates"""
+            logc_init(:self:`float`):initial value of log c value"""
       
         # check inputs
         assert lamb >= 0.0, "lambda_w must be non-negative"
@@ -296,3 +294,4 @@ class SpatialDiGraph(nx.DiGraph):
                    "train_loss={:.7f}\n"
                ).format(lamb,res[2]["nit"], self.train_loss)
            )
+
