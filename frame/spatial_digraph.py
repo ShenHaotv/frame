@@ -219,10 +219,9 @@ class SpatialDiGraph(nx.DiGraph):
         variance fixed using a quasi-newton algorithm, specifically L-BFGS.
 
         Args:
-            lamb_m (:self:`float`): penalty strength on migration rate difference
-            lamb_gamma(:(:self:`float`): penalty strength on coalescence rate difference
-            factr (:self:`float`): tolerance for convergence
+            lamb(:self:`float`): penalty strength on migration rate difference
             maxls (:obj:`int`): maximum number of line search steps
+            factr (:self:`float`): tolerance for convergence
             m (:self:`int`): the maximum number of variable metric corrections
             lb (:self:`int`): lower bound of parameters
             ub (:self:`int`): upper bound of parameters
@@ -294,4 +293,5 @@ class SpatialDiGraph(nx.DiGraph):
                    "train_loss={:.7f}\n"
                ).format(lamb,res[2]["nit"], self.train_loss)
            )
+
 
