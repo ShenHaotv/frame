@@ -7,68 +7,62 @@ from .cross_validation import run_cv
 from discreteMarkovChain import markovChain
 
 def fitting(sp_digraph,
-            lamb_grid,
-            lamb_warmup=None,
+            lamb_m_grid,
+            lamb_m_warmup=None,
             factr=1e10,
             factr_fine=1e7):
-       
-    l=len(lamb_grid)
 
-    cv, node_train_idxs = run_cv(sp_digraph,
-                                 lamb_grid,
-                                 n_folds=10,
-                                 lamb_warmup=lamb_warmup,
-                                 factr=factr,
-                                 random_state=500,
-                                 outer_verbose=True,
-                                 inner_verbose=False,)
-
-    if np.argmin(cv) == 0:
-       lamb_grid_fine = np.geomspace(lamb_grid[0], lamb_grid[1], 7)[::-1]
-
-    elif np.argmin(cv) ==l-1:
-         lamb_grid_fine = np.geomspace(lamb_grid[l-2], lamb_grid[l-1], 7)[::-1]
-
-    else:
-        lamb_grid_fine = np.geomspace(lamb_grid[np.argmin(cv)-1], lamb_grid[np.argmin(cv)+1], 7)[::-1]
-
-    cv_fine, node_train_idxs_fine = run_cv(sp_digraph,
-                                           lamb_grid_fine,
-                                           n_folds=10,
-                                           lamb_warmup=lamb_warmup,
-                                           factr=factr,
-                                           random_state=500,
-                                           outer_verbose=True,
-                                           inner_verbose=False,
-                                           node_train_idxs=node_train_idxs)
-
-    lamb_opt = lamb_grid_fine[np.argmin(cv_fine)]
-    lamb_opt = float("{:.3g}".format(lamb_opt))
+    cv_errs, node_train_idxs = run_cv(sp_digraph=sp_digraph,
+                                     lamb_m_grid=lamb_m_grid,
+                                     n_folds=10,
+                                     lamb_m_warmup=lamb_m_warmup,
+                                     factr=factr,
+                                     random_state=500,
+                                     outer_verbose=True,
+                                     inner_verbose=False,)
     
-    if lamb_warmup is not None:
-       sp_digraph.fit(lamb=lamb_warmup, factr=1e10)
-       logm = np.log(sp_digraph.m)
-       logc = np.log(sp_digraph.c)
-       
+    if np.argmin(cv_errs)==0:
+       lamb_m_grid_fine=np.geomspace(lamb_m_grid[0],lamb_m_grid[1],7)[::-1]
+
+    elif np.argmin(cv_errs)==12:
+         lamb_m_grid_fine=np.geomspace(lamb_m_grid[11],lamb_m_grid[12], 7)[::-1]
+         
     else:
-        logm = None
-        logc = None
+        lamb_m_grid_fine=np.geomspace(lamb_m_grid[np.argmin(cv_errs)-1],lamb_m_grid[np.argmin(cv_errs)+1], 7)[::-1]
+        
+    cv_errs_fine,node_train_idxs_fine=run_cv(sp_digraph, 
+                                             lamb_m_grid=lamb_m_grid_fine,
+                                             n_folds=10,
+                                             lamb_m_warmup=lamb_m_warmup,
+                                             factr=factr,
+                                             random_state=500,
+                                             outer_verbose=True,
+                                             inner_verbose=False,
+                                             node_train_idxs=node_train_idxs)
 
-    sp_digraph.fit(lamb=lamb_opt,
-                   factr=factr_fine,
+    lamb_m_opt=lamb_m_grid_fine[np.argmin(cv_errs_fine)]
+    lamb_m_opt=float("{:.3g}".format(lamb_m_opt))
+
+    sp_digraph.fit(lamb_m=lamb_m_warmup, factr=factr)
+    logm = np.log(sp_digraph.m)
+    logc = np.log(sp_digraph.c)
+    trans_alpha=-np.log((1/sp_digraph.alpha)-1)
+
+    sp_digraph.fit(lamb_m=lamb_m_opt,
                    logm_init=logm,
-                   logc_init=logc)
+                   logc_init=logc,
+                   trans_alpha_init=trans_alpha)
 
-    sp_digraph.lamb_grid=lamb_grid
-    sp_digraph.lamb_grid_fine=lamb_grid_fine
-    sp_digraph.cv=cv
-    sp_digraph.cv_fine=cv_fine
+    sp_digraph.lamb_m_grid=lamb_m_grid
+    sp_digraph.lamb_m_grid_fine=lamb_m_grid_fine
+    sp_digraph.cv=cv_errs
+    sp_digraph.cv_fine=cv_errs_fine
     
     return(sp_digraph)
 
 def run_sim_migration(topology,
                       sample_mode,
-                      n_e_mode):
+                      n_e_mode,):
     
     N_rows=11
     N_columns=9
@@ -95,8 +89,6 @@ def run_sim_migration(topology,
          directional.append(((4, 1), 4, 'W'))
          directional.append(((0, 9), 4, 'E'))
          directional.append(((8, 9), 4, 'W'))
-    else:
-        directional=None
                        
     if topology=='large_scale_spatially_converging_lineages':
        converging=[((4,5),3)]
@@ -121,7 +113,7 @@ def run_sim_migration(topology,
        m_topo=10
     else:
         m_topo=3
-        
+         
     m_base=0.1
     m_low=0.3
     m_high=3
@@ -130,7 +122,7 @@ def run_sim_migration(topology,
     node_sample_prob=1
     
     if sample_mode=='sparse':
-       node_sample_prob=0.25
+       node_sample_prob=0.3
     
     if sample_mode=='semi_random':
        semi_random_sampling=True
@@ -159,7 +151,7 @@ def run_sim_migration(topology,
     genotypes = Simulation.simulate_genotypes(sequence_length=1,
                                               mu=1e-3,
                                               target_n_snps=100000,
-                                              n_print=500)
+                                              n_print=5000)
 
     coord = Simulation.coord.copy()
     grid = Simulation.grid.copy()
@@ -180,19 +172,16 @@ def run_sim_migration(topology,
     ground_truth=SpatialDiGraph(genotypes, coord, grid, edges)
     ground_truth.M = csr_matrix(nx.adjacency_matrix(digraph, weight="weight").toarray())
     ground_truth.m = ground_truth.M.data
-    if n_e_mode=='proportional':
-       ground_truth.gamma=np.max(pi)/pi
-    else:
-        ground_truth.gamma=np.ones(d)
+    ground_truth.gamma=1/Simulation.n_e
     ground_truth.pi=pi.copy()                                                     #Get the stationary distribution   
 
-    lamb_grid = np.geomspace(1e-3, 1e3, 13)[::-1]
-    lamb_warmup=1e3
-    
+    lamb_m_grid = np.geomspace(1e-3, 1e3,13)[::-1]
+    lamb_m_warmup=1e3
+     
     sp_digraph = SpatialDiGraph(genotypes, coord, grid, edges)
-    sp_digraph=fitting(sp_digraph,
-                       lamb_grid,
-                       lamb_warmup)
+    sp_digraph=fitting(sp_digraph=sp_digraph,
+                       lamb_m_grid=lamb_m_grid,
+                       lamb_m_warmup=lamb_m_warmup)
     return(ground_truth,sp_digraph)
 
 def run_sim_re(sample_mode):
@@ -245,7 +234,7 @@ def run_sim_re(sample_mode):
     re_origin=[]
     for i in range(11):
         re_origin.append((4,i))
-    re_dt=1e-3
+    re_dt=1e-2
     re_proportion=0.1
     
     Simulation.set_up_re(re_origin,
@@ -255,20 +244,14 @@ def run_sim_re(sample_mode):
     genotypes = Simulation.simulate_genotypes(sequence_length=1,
                                               mu=1e-3,
                                               target_n_snps=100000,
-                                              n_print=500)
+                                              n_print=5000)
 
     coord = Simulation.coord.copy()
     grid = Simulation.grid.copy()
     edges = Simulation.edges.copy()
     genotypes = genotypes.astype(np.float64)
 
-    lamb_grid = np.geomspace(1e-6, 1e0, 13)[::-1]
-    lamb_warmup=1e0
-    
     sp_digraph = SpatialDiGraph(genotypes, coord, grid, edges)
-    sp_digraph=fitting(sp_digraph,
-                       lamb_grid,
-                       lamb_warmup)
     
     return(sp_digraph)
 
@@ -337,12 +320,6 @@ def run_sim_mm(sample_mode):
     grid = Simulation.grid.copy()
     edges = Simulation.edges.copy()
     genotypes = genotypes.astype(np.float64)
-
-    lamb_grid = np.geomspace(1e-3, 1e3, 13)[::-1]
-    lamb_warmup=1e3
     
     sp_digraph = SpatialDiGraph(genotypes, coord, grid, edges)
-    sp_digraph=fitting(sp_digraph,
-                       lamb_grid,
-                       lamb_warmup)
     return(sp_digraph)
