@@ -3,8 +3,8 @@ import scipy.sparse as sp
 from .lyapunov_helper import modified_singular_lyapnov
 from discreteMarkovChain import markovChain
 
-""" Construct contrast matrix"""
 def getcontrast(o,b):
+    """ Construct contrast matrix"""
     contrast=np.zeros((o-1,o))
     for i in range (0,b-1):
         contrast[i,i]=1
@@ -14,15 +14,15 @@ def getcontrast(o,b):
         contrast[i,b-1]=-1
     return(contrast)
 
-"""Construct transition matrix from non-zero elements"""
 def gettransition(m,M):
+    """Construct transition matrix from non-zero elements"""
     A=M.copy()
     A.data=m                                                                   #Compute transition matrix
     A=A.toarray()
     return (A)
 
-"""Construct laplacian from non-zero elements"""
 def getlaplacian(m,M):
+    """Construct laplacian from non-zero elements"""
     A=M.copy()
     A.data=m                                                                   #Compute laplacian
     A_rowsum=np.array(A.sum(axis=1)).reshape(-1)
@@ -30,8 +30,8 @@ def getlaplacian(m,M):
     L=D-A
     return (L)
 
-"""Get the row index and column index of the non-zero element of M"""
 def getindex(M):
+    """Get the row index and column index of the non-zero element of M"""
     nnzm=len(M.data)
     M_index=np.zeros((nnzm,2))                                
     for i in range(len(M.indptr) - 1):
@@ -40,7 +40,8 @@ def getindex(M):
            M_index[k,1]=M.indices[k]
     return(M_index)
 
-def getcoalesce(L,gamma,S,h):                                                  #Get intermediate results of the coalesce process  
+def getcoalesce(L,gamma,S,h):    
+    """Get intermediate results of the structured coalescent process"""                                              
     d=len(gamma)
     o=S.shape[0]
     h0=h[0]
@@ -65,8 +66,9 @@ def getcoalesce(L,gamma,S,h):                                                  #
     Ttotal=(o-1)/quant1                                                        #Total branch length
     lik=quant1+quant2                                                          #Negative log likelihood
     return(Ttotal,Time,T_bar,Tc_inv,lik)
-    
-def lik_wrapper(z,M,S,h,p,k):
+   
+def lik_wrapper(z,M,S,h,p,alpha_lb,alpha_ub,alpha_scale):
+    """Compute likelihood and its gradient""" 
     d=M.shape[0]
     nnzm=len(z)-2
     o=S.shape[0]
@@ -81,9 +83,9 @@ def lik_wrapper(z,M,S,h,p,k):
     M_index=getindex(M)
     
     m=np.exp(z[0:nnzm])
-    c=np.zeros(2)
-    c[0]=np.exp(z[nnzm])
-    c[1]=1/(1+np.exp(-z[nnzm+1]/k))
+    cp=np.zeros(2)
+    cp[0]=np.exp(z[nnzm])
+    cp[1]=alpha_lb+(alpha_ub-alpha_lb)/(1+np.exp(-z[nnzm+1]/alpha_scale))
     L=getlaplacian(m,M)  
     M=np.identity(d)-L
     mc=markovChain(M)
@@ -93,9 +95,9 @@ def lik_wrapper(z,M,S,h,p,k):
        mc.computePi('power') 
     pi=mc.pi.reshape(d)      
     pi=pi/np.sum(pi)
-    loggamma=np.log(c[0])-c[1]*np.log(pi)
+    loggamma=np.log(cp[0])-cp[1]*np.log(pi)
     gamma=np.exp(loggamma)
-    dgamma=-c[1]*gamma/pi
+    dgamma=-cp[1]*gamma/pi
     
     (Ttotal,Time,T_bar,Tc_inv,lik)=getcoalesce(L,gamma,S,h)
     lik=lik*p/2
@@ -118,7 +120,8 @@ def lik_wrapper(z,M,S,h,p,k):
     beta=np.linalg.solve(L+np.ones((d,d)),x)
    
     grad_lik_m=np.zeros(nnzm)        
-    grad_lik_c=np.zeros(2)
+    grad_lik_c=0
+    grad_lik_alpha=0
     
     if np.min(Time)>0:                             
        for i in range(nnzm):                                                   #Compute the gradient of the negative log likelihood function with respect to m
@@ -132,12 +135,13 @@ def lik_wrapper(z,M,S,h,p,k):
        for i in range(d):                                                      #Compute the gradient of the negative log likelihood function with respect to c     
            if Time_grad[i,i]!=0:
               x=np.log(np.abs(Time_grad[i,i]))+np.log(Time[i,i])
-              x_c0=x-c[1]*np.log(pi[i])
-              grad_lik_c[0]+=-np.sign(Time_grad[i,i])*np.exp(x_c0)
-              grad_lik_c[1]+=-np.sign(Time_grad[i,i])*np.exp(x)*(-np.log(pi[i])*gamma[i])
-    return (lik,grad_lik_m,grad_lik_c)
-
-def pen_wrapper(z,M,deg,lamb):      
+              x_cp0=x-cp[1]*np.log(pi[i])
+              grad_lik_c+=-np.sign(Time_grad[i,i])*np.exp(x_cp0)
+              grad_lik_alpha+=-np.sign(Time_grad[i,i])*np.exp(x)*(-np.log(pi[i])*gamma[i])
+    return (lik,grad_lik_m,grad_lik_c,grad_lik_alpha)   
+ 
+def pen_wrapper(z,M,deg,lamb_m):    
+    """Compute penalty and its gradient"""  
     nnzm=len(z)-2
     x=z[0:nnzm]
     m=np.exp(x)  
@@ -180,30 +184,33 @@ def pen_wrapper(z,M,deg,lamb):
     coeff_hm=np.sum(m*grad_pen_hh*dh)/nnzm                                     #Coefficients
     grad_pen_hm=(grad_pen_hh*dh-coeff_hm/m)/m_geomean                          #Gradient with respect to m (second term)   
         
-    pen=lamb*(pen_g+pen_h)
-    grad_pen=lamb*(grad_pen_gm+grad_pen_hm)
+    pen=lamb_m*(pen_g+pen_h)
+    grad_pen=lamb_m*(grad_pen_gm+grad_pen_hm)
     return (pen,grad_pen)
 
-def loss_wrapper(z,M,S,h,p,lamb,deg,k):    
+def loss_wrapper(z,M,S,h,p,lamb_m,deg,alpha_lb,alpha_ub,alpha_scale):   
+    """Compute loss and its gradient"""   
     o=S.shape[0]
     d=M.shape[0]
     nnzm=len(z)-2
     r=300
     coeff=(o-1)*p/(2*d*r)
     theta=np.exp(z[0:nnzm+1])
-    alpha=1/(1+np.exp(-z[nnzm+1]/k))
-    coeff_alpha=alpha*(1-alpha)/k
+    s=1/(1+np.exp(-z[nnzm+1]/alpha_scale))
+    coeff_alpha=(alpha_ub-alpha_lb)*s*(1-s)/alpha_scale
+
     theta=np.append(theta,coeff_alpha)
 
-    (lik,grad_lik_m,grad_lik_c)=lik_wrapper(z,M,S,h,p,k)
-    (pen,grad_pen)=pen_wrapper(z,M,deg,lamb) 
+    (lik,grad_lik_m,grad_lik_c,grad_lik_alpha)=lik_wrapper(z,M,S,h,p,alpha_lb,alpha_ub,alpha_scale)
+    (pen,grad_pen)=pen_wrapper(z,M,deg,lamb_m) 
          
     loss=lik+coeff*pen
     
     grad_loss_m=grad_lik_m+coeff*grad_pen
     grad_loss_c=grad_lik_c
+    grad_loss_alpha=grad_lik_alpha
 
-    grad_loss= np.append(grad_loss_m,grad_loss_c)                              #Merge the gradient
-    grad_loss_z=grad_loss*theta                                                #Gradient with respect to z
+    grad_loss=np.concatenate([grad_loss_m,np.atleast_1d(grad_loss_c),np.atleast_1d(grad_loss_alpha)])        #Merge the gradient
+    grad_loss_z=grad_loss*theta                                                                              #Gradient with respect to z
 
     return (loss,grad_loss_z)
