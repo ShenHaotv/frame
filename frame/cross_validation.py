@@ -15,74 +15,8 @@ def getcontrast(o,b):
         contrast[i,b-1]=-1
     return(contrast)
 
-def run_cv(
-    sp_digraph,
-    lamb_grid,
-    lamb_warmup=None,
-    n_folds=None,
-    factr=1e10,
-    random_state=500,
-    outer_verbose=True,
-    inner_verbose=False,
-    node_train_idxs=None,
-    ):
-    """Run cross-validation."""
-    o=sp_digraph.S.shape[0]
-
-    # default is None i.e., leave-one-out CV
-    if n_folds is None:
-       n_folds = o
-        
-    # setup cv indicies
-    if node_train_idxs is None:
-       node_train_idxs=setup_k_fold_cv(o=o,n_splits=n_folds,random_state=random_state)
-       
-    else:
-        node_train_idxs=node_train_idxs
-
-    if lamb_warmup is None:
-       lamb_warmup=float(np.max(lamb_grid))
-    # CV error
-    n_lamb = len(lamb_grid)
-
-    errs=np.zeros((n_folds,n_lamb))
-    
-    for fold in range(n_folds):      
-        if outer_verbose:
-            print("\n fold=", fold+1)
-        
-        node_train_idx=node_train_idxs[fold].astype(int)
-                                  
-        sp_digraph_warmup=copy_spatial_digraph(sp_digraph, node_train_idx)      #Warm up
-        sp_digraph_warmup.fit(lamb=lamb_warmup,
-                              factr=factr,
-                              lb=-np.Inf,
-                              ub=np.Inf,
-                              verbose=inner_verbose)
-        
-        logm_init=np.log(sp_digraph_warmup.m)
-        logc_init=np.log(sp_digraph_warmup.c)
-             
-        for i, lamb in enumerate(lamb_grid):                                    #Formal cv
-            if outer_verbose:
-               print("\riteration lambda={}/{}".format(i + 1, n_lamb),end="",)
-               # fit on train set
-            lamb= float(lamb)
-            (errs[fold,i])=error(sp_digraph,
-                                 node_train_idx,
-                                 lamb=lamb,                                    
-                                 factr=factr,
-                                 verbose=inner_verbose,
-                                 logm_init=logm_init,
-                                 logc_init=logc_init,
-                                 )           
-             
-    cv_err=np.sum(errs,axis=0)/o
-     
-    return (cv_err,node_train_idxs)
-
 def setup_k_fold_cv(o,n_splits, random_state):
-    """Get the indices of the training set"""    
+    """Get the indices of the training set"""     
     
     kf = KFold(
         n_splits=n_splits, random_state=random_state, shuffle=True
@@ -91,10 +25,8 @@ def setup_k_fold_cv(o,n_splits, random_state):
     node_train_idxs = [train_index for train_index,_ in kf.split(np.arange(o))]
     return  node_train_idxs
 
-
 def copy_spatial_digraph(sp_digraph, node_train_idx):
     """Copy SpatialDiGraph object"""
-    
     sp_digraph_copy=deepcopy(sp_digraph)
     h0_copy=sp_digraph.h[0][node_train_idx]
     h1_copy=sp_digraph.h[1][node_train_idx]
@@ -106,20 +38,27 @@ def copy_spatial_digraph(sp_digraph, node_train_idx):
 
 def error(sp_digraph,
           node_train_idx,
-          lamb,
+          lamb_m,
           factr,
           verbose,
+          alpha_lb,
+          alpha_ub,
+          trans_alpha_init,
+          alpha_scale,
           logm_init=None,
-          logc_init=None,
-          ):
-    """compute the cv error"""
-  
-    sp_digraph_train=copy_spatial_digraph(sp_digraph, node_train_idx)    
-    sp_digraph_train.fit(lamb=lamb,
+          logc_init=None,):
+    """Compute validation error for a given training set."""
+    
+    sp_digraph_train=copy_spatial_digraph(sp_digraph, node_train_idx)   
+    sp_digraph_train.fit(lamb_m=lamb_m,
                          factr=factr,
                          lb=-np.Inf,
                          ub=np.Inf,
                          verbose=verbose,
+                         alpha_lb=alpha_lb,
+                         alpha_ub=alpha_ub,
+                         trans_alpha_init=trans_alpha_init,
+                         alpha_scale=alpha_scale,
                          logm_init=logm_init,
                          logc_init=logc_init,
                          )
@@ -161,7 +100,90 @@ def error(sp_digraph,
     difference=prediction-frequencies_test_con
     n_snps = sp_digraph.n_snps
     err=np.sum(difference**2)/n_snps
-
+     
     gc.collect()
-              
     return err
+
+def run_cv(sp_digraph,
+           lamb_m_grid,
+           lamb_m_warmup=None,
+           n_folds=None,
+           factr=1e10,
+           random_state=500,
+           alpha_lb=0,
+           alpha_ub=1,
+           trans_alpha_init=0,
+           alpha_lb_warmup=0,
+           alpha_ub_warmup=1,
+           trans_alpha_init_warmup=0,
+           alpha_scale=1,
+           outer_verbose=True,
+           inner_verbose=False,
+           node_train_idxs=None,):
+    
+    o=sp_digraph.S.shape[0]
+
+    # default is None i.e., leave-one-out CV
+    if n_folds is None:
+       n_folds = o
+        
+    # setup cv indicies
+    if node_train_idxs is None:
+       node_train_idxs=setup_k_fold_cv(o=o,n_splits=n_folds,random_state=random_state)
+       
+    else:
+        node_train_idxs=node_train_idxs
+
+    # CV error
+    n_lamb= len(lamb_m_grid)
+
+    errs=np.zeros((n_folds,n_lamb))
+    
+    for fold in range(n_folds):      
+        if outer_verbose:
+            print("\n fold=", fold+1)
+        
+        node_train_idx=node_train_idxs[fold].astype(int)
+        
+        if lamb_m_warmup is not None:                        
+           sp_digraph_warmup=copy_spatial_digraph(sp_digraph, node_train_idx)      #Warm up
+           sp_digraph_warmup.fit(lamb_m=lamb_m_warmup,
+                                 factr=factr,
+                                 lb=-np.Inf,
+                                 ub=np.Inf,
+                                 alpha_lb=alpha_lb_warmup,
+                                 alpha_ub=alpha_ub_warmup,
+                                 trans_alpha_init=trans_alpha_init_warmup,
+                                 alpha_scale=alpha_scale,
+                                 verbose=inner_verbose)
+             
+           logm_init=np.log(sp_digraph_warmup.m)   
+           logc_init=np.log(sp_digraph_warmup.c)
+           trans_alpha_init=alpha_scale*np.log((sp_digraph_warmup.alpha-alpha_lb)/(alpha_ub-sp_digraph_warmup.alpha))
+           
+        else:        
+            logm_init=None 
+            logc_init=None
+            trans_alpha_init=trans_alpha_init
+           
+        for i, lamb_m in enumerate(lamb_m_grid):                                      #Formal cv
+            if outer_verbose:
+               print("\riteration lambda_m={}/{}".format(i + 1, n_lamb),end="",)
+               # fit on train set
+            lamb_m= float(lamb_m)
+            (errs[fold,i])=error(sp_digraph=sp_digraph,
+                                 node_train_idx=node_train_idx,
+                                 lamb_m=lamb_m,  
+                                 factr=factr,
+                                 verbose=inner_verbose,
+                                 alpha_lb=alpha_lb,
+                                 alpha_ub=alpha_ub,
+                                 trans_alpha_init=trans_alpha_init,
+                                 alpha_scale=alpha_scale,
+                                 logm_init=logm_init,
+                                 logc_init=logc_init,
+                                 )           
+             
+    cv_err=np.sum(errs,axis=0)/o
+     
+    return (cv_err,node_train_idxs)
