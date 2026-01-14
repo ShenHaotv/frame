@@ -2,6 +2,7 @@ from __future__ import absolute_import, division, print_function
 import sys
 import networkx as nx
 import numpy as np
+import numbers
 from scipy.optimize import fmin_l_bfgs_b
 from .loss import getlaplacian,getcoalesce,loss_wrapper
 from discreteMarkovChain import markovChain
@@ -113,27 +114,26 @@ class SpatialDiGraph(nx.DiGraph):
         self.m0=self.M0.data           
         self.L0=getlaplacian(self.m0,self.M0)
         self.gamma0=Ttotal*self.gamma0
-
-        self.k=1
-        self.c0=np.zeros(2)
-        self.c0[0]=self.gamma0[0]/np.sqrt(d)
-        self.c0[1]=0.5
-     
+      
+        self.c0=self.gamma0[0]/np.sqrt(d)
+        self.alpha0=0.5
+      
         self.M=self.M0.copy()
         self.m=self.m0.copy()
         self.L=self.L0.copy()
         self.gamma=self.gamma0.copy()
-        self.c=self.c0.copy()
+        self.c=self.c0
+        self.alpha=self.alpha0
   
     def _init_digraph(self, node_pos, edges):
         """Initialize the digraph and related digraph objects
 
-        Args:
-            node_pos (:obj:`numpy.ndarray`):  spatial positions of nodes
-            edges (:obj:`numpy.ndarray`): edge array (0-based indexing)
-        """
+         Args:
+        node_pos (:obj:`numpy.ndarray`): spatial positions of nodes
+        edges (:obj:`numpy.ndarray`): edge array (0-based indexing)
+         """
         self.add_nodes_from(np.arange(node_pos.shape[0]))
-       
+    
         # Create a list to hold both original and reversed edges (0-based)
         all_edges = []
         for edge in edges:
@@ -149,7 +149,7 @@ class SpatialDiGraph(nx.DiGraph):
             self.nodes[i]["pos"] = node_pos[i, :]
             self.nodes[i]["n_haps"] = 0
             self.nodes[i]["sample_idx"] = []
-    
+        
     def _assign_samples_to_nodes(self, sample_pos, node_pos):
        """Assigns each sample to a node on the graph by finding the closest
        node to that sample
@@ -192,71 +192,79 @@ class SpatialDiGraph(nx.DiGraph):
             self.frequencies[i, :] = frequencies
                                
     # ------------------------- Optimizers -------------------------
+    def fit(self,   
+            lamb_m,
+            maxls=50,
+            factr=1e7,
+            m=10,
+            lb=-np.Inf,
+            ub=np.Inf,
+            maxiter=15000,
+            verbose=True,
+            alpha_lb=0.0,
+            alpha_ub=1.0,
+            trans_alpha_init=0.0,
+            alpha_scale=1.0,
+            logm_init=None,
+            logc_init=None,):
+        """Estimates model parameters with L-BFGS for either compact ('cp') or full ('fp') parameterization model.
 
-
-    def fit(
-        self,       
-        lamb,
-        maxls=50,
-        factr=1e7,
-        m=10,
-        lb=-np.Inf,
-        ub=np.Inf,
-        maxiter=15000,
-        verbose=True,
-        logm_init=None,
-        logc_init=None,
-        ):
-        if  logm_init is None:
-            logm_init=np.log(self.m0)
-        
-        if logc_init is None:
-           logc_init=np.zeros(2)
-           logc_init[0]=np.log(self.c0[0])
-           logc_init[1]=-self.k*np.log((1/self.c0[1])-1)
-                     
-        """Estimates the edge weights of the full model holding the residual
-        variance fixed using a quasi-newton algorithm, specifically L-BFGS.
-
-        Args:
-            lamb(:self:`float`): penalty strength on migration rate difference
-            maxls (:obj:`int`): maximum number of line search steps
-            factr (:self:`float`): tolerance for convergence
-            m (:self:`int`): the maximum number of variable metric corrections
-            lb (:self:`int`): lower bound of parameters
-            ub (:self:`int`): upper bound of parameters
-            maxiter (:self:`int`): maximum number of iterations to run L-BFGS
-            verbose (:self:`Bool`): boolean to print summary of results
-            logm_init(:self:`float`):initial value of log edge weights
-            logc_init(:self:`float`):initial value of log c value"""
+           Args:
+               lamb_m (real): Penalty strength on migration-rate differences.
+               maxls (int): Maximum number of line search steps.
+               factr (real): Tolerance for convergence (passed to L-BFGS-B).
+               m (int): The maximum number of variable metric corrections.
+               lb (real): Lower bound for parameters (applied to all elements).
+               ub (real): Upper bound for parameters (applied to all elements).
+               maxiter (int): Maximum number of L-BFGS iterations.
+               verbose (bool): Print a brief optimization summary if True.
+               alpha_lb (real): Lower bound of alpha.
+               alpha_ub (real): Upper bound of alpha.
+               trans_alpha_init (real): Initial value of the unconstrained (transformed) parameter corresponding
+                                        to alpha. This parameter lives on ℝ and is mapped to alpha via an logistic transformation.
+               alpha_scale (real): Scale parameter of the logistic transformation. Controls how
+                                   rapidly α transitions between its lower and upper bounds as a function
+                                   of the transformed parameter. Larger values produce a flatter transition;
+                                   smaller values produce a steeper transition.
+               logm_init (np.ndarray): Initial values for log edge weights (len == nnz of M).
+               logc_init (np.ndarray): Initial values for log c (len ==1). """
       
-        # check inputs
-        assert lamb >= 0.0, "lambda must be non-negative"
-        assert type(lamb) == float, "lambda must be float"
-        assert type(factr) == float, "factr must be float"
-        assert maxls > 0, "maxls must be at least 1"
-        assert type(maxls) == int, "maxls must be int"
-        assert type(m) == int, "m must be int"
-        assert type(lb) == float, "lb must be float"
-        assert type(ub) == float, "ub must be float"
+        assert isinstance(lamb_m, numbers.Real) and lamb_m >= 0.0, "lamb_m must be non-negative real number"
+        assert isinstance(maxls, int) and maxls > 0, "maxls must be int >= 1"
+        assert isinstance(factr, numbers.Real) and factr>0, "factr must be positive real number"
+        assert isinstance(m, int), "m must be int"
+        assert isinstance(lb, numbers.Real), "lb must be real number"
+        assert isinstance(ub, numbers.Real), "ub must be real number"
         assert lb < ub, "lb must be less than ub"
-        assert type(maxiter) == int, "maxiter must be int"
-        assert maxiter > 0, "maxiter be at least 1"
-   
+        assert isinstance(maxiter, int) and maxiter > 0, "maxiter must be int >= 1"
+        assert isinstance(alpha_lb, numbers.Real) and 0 <= alpha_lb <= 1, "alpha_lb must be real number in [0,1]"
+        assert isinstance(alpha_ub, numbers.Real) and 0 <= alpha_ub <= 1, "alpha_ub must be real number in [0,1]"
+        assert alpha_lb < alpha_ub, "alpha_lb must be less than alpha_ub"
+        assert isinstance(trans_alpha_init, numbers.Real), "trans_alpha_init must be real number"
+        assert isinstance(alpha_scale, numbers.Real) and alpha_scale > 0, "alpha_scale must be positive real number"
+        
+        if logm_init is None:
+           logm_init = np.log(self.m0)
+           
+        alpha_init=alpha_lb+(alpha_ub-alpha_lb) / (1 + np.exp(-trans_alpha_init/alpha_scale))
+
+        if logc_init is None:
+           d=self.number_of_nodes()
+           c_init=self.gamma0[0]/np.power(d,alpha_init)
+           logc_init=np.log(c_init)
+         
         # run l-bfgs
-        x0 =  np.append(logm_init,logc_init)
-        
-        res = fmin_l_bfgs_b(
-              func=loss_wrapper,
-              x0=x0,
-              args=[self.M0,self.S,self.h,self.n_snps,lamb,self.deg,self.k],
-              factr=factr,              
-              m=m,
-              maxls=maxls,
-              maxiter=maxiter,
-              approx_grad=False,
-              bounds=[(lb, ub) for _ in range(x0.shape[0])],)
-        
+        x0 = np.concatenate([logm_init,np.atleast_1d(logc_init),np.atleast_1d(trans_alpha_init)])
+        res = fmin_l_bfgs_b(func=loss_wrapper,
+                            x0=x0,
+                            args=[self.M0,self.S,self.h,self.n_snps,lamb_m,self.deg,alpha_lb,alpha_ub,alpha_scale],
+                            factr=factr,              
+                            m=m,
+                            maxls=maxls,
+                            maxiter=maxiter,
+                            approx_grad=False,
+                            bounds=[(lb, ub) for _ in range(x0.shape[0])],)
+           
         if maxiter >= 100:
            assert res[2]["warnflag"] == 0, "did not converge"
 
@@ -265,34 +273,28 @@ class SpatialDiGraph(nx.DiGraph):
         o=self.S.shape[0]
         nnzm=len(self.m0)  
         self.m = np.exp(res[0][0:nnzm])
-        self.M.data=self.m                                                      #Migration rate matrix
-        self.c[0]=np.exp(res[0][nnzm])
-        self.c[1]=1/(1+np.exp(-res[0][nnzm+1]/self.k))
-        self.L=getlaplacian(self.m,self.M)                                      #Laplacian
+        self.M.data=self.m                                                     #Migration rate matrix
+        self.L=getlaplacian(self.m,self.M)
         mc=markovChain(np.identity(d)-self.L)
         mc.computePi('linear')
-        self.pi=mc.pi.reshape(d)                                                 #Stationary distribution, represented as a column vector  
+        self.pi=mc.pi.reshape(d)                                               #Stationary distribution, represented as a column vector  
         if np.min(self.pi)<=0:
            mc.computePi('power') 
         self.pi=mc.pi.reshape(d)   
-        self.pi=self.pi/np.sum(self.pi)     
-        self.gamma=self.c[0]/(self.pi**self.c[1])                                #Coalescent rates
+        self.pi=self.pi/np.sum(self.pi) 
+                                                        
+        self.c=np.exp(res[0][nnzm])
+        self.alpha=alpha_lb+(alpha_ub-alpha_lb)/(1+np.exp(-res[0][nnzm+1]/alpha_scale))       
+        self.gamma=self.c/(self.pi**self.alpha)                                #Coalescent rates
+            
         coalesce_wrapper=getcoalesce(self.L, self.gamma, self.S, self.h)
-        self.T=coalesce_wrapper[1]                                              # Expected pairwise coalescence time
+        self.T=coalesce_wrapper[1]                                             #Expected pairwise coalescence time
         self.T_bar=coalesce_wrapper[2]
         diag=np.diag(self.T_bar).reshape((1,o))
         self.distance_fit=2*self.T_bar-np.ones((o,1))@diag-diag.T@np.ones((1,o)) # Fitted genetic distances
-        self.train_loss=res[1]                                                  # Train loss
-        
-        
+        self.train_loss=res[1]                                                   # Train loss
+               
         if verbose:
-           sys.stdout.write(
-               (
-                   "lambda={:.7f}, "
-                   "converged in {} iterations, "
-                   "train_loss={:.7f}\n"
-               ).format(lamb,res[2]["nit"], self.train_loss)
-           )
-
-
-
+           sys.stdout.write(("\nlambda={:.7f}, "
+                             "converged in {} iterations, "
+                             "train_loss={:.7f}").format(lamb_m,res[2]["nit"], self.train_loss))
