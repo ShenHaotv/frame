@@ -34,7 +34,7 @@ Once the conda environment has been setup with these dependencies we can install
 
 ```
 
-pip install git+https://github.com/shenhaotv/frame
+pip install --no-deps git+https://github.com/shenhaotv/frame
 
 ```
 
