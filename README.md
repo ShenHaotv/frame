@@ -28,7 +28,6 @@ conda install click==8.1.8 fiona==1.10.1 cartopy==0.24.1
 conda install networkx==3.4.2 setuptools=75.8.0 pandas-plink=2.3.1
 conda install shapely=2.0.6  msprime=1.3.3
 pip install discreteMarkovChain
-
 ```
 Once the conda environment has been setup with these dependencies we can install `frame`:
 
