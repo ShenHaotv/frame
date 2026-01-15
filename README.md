@@ -14,12 +14,7 @@ We recommend that users install [Anaconda][anaconda] or [Miniconda][miniconda] t
 To get started, set up a new conda environment, make sure that ```defaults``` is the only channel:
 
 ```
-conda create -n frame-e -c defaults --strict-channel-priority \
-  python=3.11 \
-  "blas=*=mkl" \
-  mkl=2025.0.1 intel-openmp=2025.0.3 mkl-service \
-  numpy=1.26.4 scipy=1.11.4 scikit-learn=1.5.1 \
-  threadpoolctl
+conda create -n frame-e python=3.11.9
 conda activate frame-e
 ```
 Note: For Mac M1 users they'll need to add `--platform=osx-arm64` to the conda create command. 
@@ -27,6 +22,7 @@ Note: For Mac M1 users they'll need to add `--platform=osx-arm64` to the conda c
 The dependencies are listed in dependencies.txt. We recommend installing packages using `conda` and 'pip' in the following sequence to avoid conflicts in packages:
 
 ```
+conda install numpy=1.26.4 scipy=1.11.4 scikit-learn=1.5.1
 conda install pytest==8.3.4 pyproj==3.6.1 matplotlib==3.10
 conda install click==8.1.8 fiona==1.10.1 cartopy==0.24.1 
 conda install networkx==3.4.2 setuptools==75.8.0 shapely==2.0.6 
