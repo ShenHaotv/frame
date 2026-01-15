@@ -14,11 +14,11 @@ We recommend that users install [Anaconda][anaconda] or [Miniconda][miniconda] t
 To get started, set up a new conda environment, make sure that ```defaults``` is the only channel:
 
 ```
-conda create -n frame-e python=3.11
-  -c defaults --strict-channel-priority
-  "blas=*=mkl"
-  mkl=2025.0.1 intel-openmp=2025.0.3 mkl-service
-  numpy=1.26.4 scipy=1.11.4 scikit-learn=1.5.1 
+conda create -n frame-e -c defaults --strict-channel-priority \
+  python=3.11 \
+  "blas=*=mkl" \
+  mkl=2025.0.1 intel-openmp=2025.0.3 mkl-service \
+  numpy=1.26.4 scipy=1.11.4 scikit-learn=1.5.1 \
   threadpoolctl
 conda activate frame-e
 ```
