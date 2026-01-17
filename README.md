@@ -32,9 +32,7 @@ pip install pandas-plink==2.3.1 msprime==1.3.3 discreteMarkovChain
 Once the conda environment has been setup with these dependencies we can install `frame`:
 
 ```
-
 pip install --no-deps git+https://github.com/shenhaotv/frame
-
 ```
 
 # Running frame
