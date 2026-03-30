@@ -22,7 +22,7 @@ The dependencies are listed in dependencies.txt. We recommend installing package
 
 ```
 conda install numpy=1.26.4 scipy=1.11.4 scikit-learn=1.5.1 "blas=*=mkl" mkl-service threadpoolctl
-pip install "mkl==2025.0.1" "intel-openmp==2025.0.3"
+pip install "mkl==2023.1.0" "intel-openmp==2023.0.0"
 conda install pytest==8.3.4 pyproj==3.6.1 matplotlib==3.10
 conda install click==8.1.8 fiona==1.10.1 cartopy==0.24.1
 conda install networkx==3.4.2 setuptools==75.8.0 shapely==2.0.6
