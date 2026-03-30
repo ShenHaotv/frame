@@ -29,7 +29,7 @@ conda install networkx==3.4.2 setuptools==75.8.0 shapely==2.0.6
 pip install pandas-plink==2.3.1 msprime==1.3.3 discreteMarkovChain
 ```
 
-*Note for macOS Users: Intel MKL support for macOS ended with version 2023.2.2. Please use the following command to install the last compatible version:
+**Note for macOS Users: Intel MKL support for macOS ended with version 2023.2.2. Please use the following command to install the last compatible version:
 pip install "mkl==2023.2.2" "intel-openmp==2023.2.0"** 
 
 Once the conda environment has been setup with these dependencies we can install `frame`:
