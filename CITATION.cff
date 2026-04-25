@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Shen"
+    given-names: "Hao"
+    affiliation: "University of Chicago"
+  - family-names: "Novembre"
+    given-names: "John"
+    affiliation: "University of Chicago"
+title: "FRAME: Fine-Resolution Asymmetric Migration Estimation"
+version: 1.0.0
+date-released: 2026-04-24
+url: "https://github.com/ShenHaotv/frame"
+repository-code: "https://github.com/ShenHaotv/frame"
+keywords:
+  - "population genomics"
+  - "gene flow"
+  - "asymmetric migration"
+license: "MIT"
