@@ -105,6 +105,7 @@ class Vis(object):
         cbar_height="5%",
         cbar_bbox_to_anchor=(0.05, 0.2),
         compass_font_size=10,
+        compass_ticklabelsize=None,
         compass_radius=0.15,
         compass_bbox_to_anchor=(0.05, 0.1),
         compass_pad=0.5,
@@ -179,6 +180,10 @@ class Vis(object):
         
         #color compass
         self.compass_font_size = compass_font_size
+        if compass_ticklabelsize is not None:
+           self.compass_ticklabelsize=compass_ticklabelsize
+        else:
+            self.compass_ticklabelsize=compass_font_size
         self.compass_radius = compass_radius 
         self.compass_bbox_to_anchor =compass_bbox_to_anchor
         self.compass_pad=compass_pad
@@ -629,7 +634,9 @@ class Vis(object):
            v3=self.vmax_diff
            self.compass_axins.set_xticklabels([ f'      ····· {v1:.2f}\n      ─ ─ {v2:.2f}\n      ───{v3:.2f}', 
                                                 r"$\mathrm{△log}_{10}(\mathrm{m})$",  
-                                                '', ''], fontsize=self.compass_font_size)
+                                                '', ''], fontsize=self.compass_ticklabelsize)
+           labels = self.compass_axins.get_xticklabels()
+           labels[1].set_fontsize(self.compass_font_size) 
            
         elif mode=='Summary':
              v1=self.vmax_summary/3
@@ -637,7 +644,9 @@ class Vis(object):
              v3=self.vmax_summary
              self.compass_axins.set_xticklabels([f'      ····· {v1:.2f}\n      ─ ─ {v2:.2f}\n      ───{v3:.2f}', 
                                                r"$\mathrm{log}_{10}(1+\frac{\mathrm{m_{s}}}{\mathrm{m_{min}}})$",
-                                                '', ''],fontsize=self.compass_font_size)
+                                                '', ''],fontsize=self.compass_ticklabelsize)
+             labels = self.compass_axins.get_xticklabels()
+             labels[1].set_fontsize(self.compass_font_size) 
             
         self.compass_axins.tick_params(axis='x', pad=0)      
         for i, label in enumerate(self.compass_axins.get_xticklabels()):
@@ -730,14 +739,16 @@ class Vis(object):
                                      axs,
                                      draw_map=True,
                                      draw_nodes=True,
-                                     set_title=True,):
+                                     set_title=True,
+                                     title_font_size=10,):
         modes=['Full','Base','Difference','Summary']
         for i in range(4):  
             self.draw_migration_rates(ax=axs[i],
                                       mode=modes[i],
                                       draw_map=draw_map,
                                       draw_nodes=draw_nodes,
-                                      set_title=set_title,)
+                                      set_title=set_title,
+                                      title_font_size=title_font_size,)
      
     """Wrapper of attributes"""
     def draw_attributes_wrapper(self,
